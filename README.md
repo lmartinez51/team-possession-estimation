@@ -162,6 +162,42 @@ python task4_classifier_and_decoder.py
 python task5_evaluation_and_ablation.py
 ```
 
+### End-to-End Submission CLI (`run_submission_pipeline.py`)
+
+The unified execution script [`run_submission_pipeline.py`](file:///run_submission_pipeline.py) orchestrates Tasks 1 through 5 into an end-to-end training, out-of-fold calibration, feature-caching, and prediction CLI.
+
+#### Key Features:
+* **Format-Agnostic Ingestion (`MetricaFormatAdapter`):** Ingests either canonical two-table tracking data (`frame_df` + `player_tracks_df`) or unpivots wide single-table Metrica formats (`Home_11_x`, `Home_11_y`, `Ball_x`, etc.) while normalizing header aliases (`Period`, `Time [s]`, `Ball_X`) and providing robust defaults for required competition masks.
+* **Deterministic Feature Caching (`FeatureCacheManager`):** Caches extracted features in `.feature_cache/` indexed by match ID, schema version (`RFC_v2.0.0_MVP`), and SHA-256 configuration hash to accelerate repeated evaluation.
+* **Explicit Latent State Preservation:** Generates competition-compliant binary predictions (`Home` vs. `Away`) while preserving distinct latent states (`Contested_Home`, `Contested_Away`, `Unknown_Missing_Ball`, `Dead_Ball`) in the output submission CSV.
+* **TypeSafe AI (`Jev / System One`) Integration:** Supports sparse ambiguity refinement using live API calls (`--live-jev`) or heuristic fallbacks.
+
+#### CLI Usage Examples:
+
+```powershell
+# 1. Prediction on custom match data with live TypeSafe AI (Jev / System One) refinement:
+.\.venv\Scripts\python.exe run_submission_pipeline.py --mode predict --frames ruta_frames.csv --players ruta_players.csv --output artifacts\mi_submission.csv --live-jev
+
+# 2. Self-contained end-to-end verification gate (trains, OOF-tunes, serializes bundle, and tests held-out match):
+.\.venv\Scripts\python.exe run_submission_pipeline.py --mode verify
+
+# 3. Train and export model bundle on benchmark or custom training matches:
+.\.venv\Scripts\python.exe run_submission_pipeline.py --mode train --model-bundle artifacts\barca_possession_mvp_v2.pkl
+
+# 4. Predict on a single wide-format Metrica tracking table:
+.\.venv\Scripts\python.exe run_submission_pipeline.py --mode predict --frames ruta_Sample_Game_1_RawTrackingData.csv --output artifacts\mi_submission.csv
+```
+
+#### CLI Flag Reference:
+* `--mode`: Execution mode (`verify`, `train`, `predict`). Default is `verify`.
+* `--frames`: Path to input `frame_df` CSV/Parquet or single wide-format Metrica tracking table.
+* `--players`: Optional path to input `player_tracks_df` CSV/Parquet (required if `--frames` is not a wide-format table).
+* `--meta`: Optional path to match metadata JSON (`match_id`, `sampling_rate_hz`, pitch dimensions).
+* `--model-bundle`: Path to serialized model `.pkl` bundle (default: `artifacts/barca_possession_mvp_v2.pkl`).
+* `--output`: Path to write the output submission CSV (default: `artifacts/submission_output.csv`).
+* `--live-jev`: Enables live TypeSafe AI (`Jev / System One`) API queries for ambiguous candidate frames using `TYPESAFE_API_KEY`.
+
+
 ---
 
 ## 5. Repository Structure
@@ -170,6 +206,7 @@ python task5_evaluation_and_ablation.py
 .
 ├── docs/
 │   └── technical_submission_report.md     # Detailed RFC v2.0 technical report
+├── run_submission_pipeline.py             # Unified CLI submission & prediction pipeline
 ├── task1_schema_and_preprocessing.py      # Quality-aware segmented preprocessing
 ├── task2_feature_engine.py                # Kinematics, reachability & control evidence
 ├── task3_anchors_and_bridges.py           # Anchors, bounded bridges & Jev refiner

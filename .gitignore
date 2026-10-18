@@ -31,3 +31,7 @@ Thumbs.db
 
 # Environment variables
 .env
+
+# Feature cache and output artifacts
+.feature_cache/
+artifacts/
