@@ -682,8 +682,14 @@ class PossessionSubmissionPipeline:
 
     @classmethod
     def load_model_bundle(cls, bundle_path: str, cache_dir: str = ".feature_cache") -> "PossessionSubmissionPipeline":
+        class _MainRedirectUnpickler(pickle.Unpickler):
+            def find_class(self, module: str, name: str) -> Any:
+                if module == "__main__":
+                    module = "run_submission_pipeline"
+                return super().find_class(module, name)
+
         with open(bundle_path, "rb") as f:
-            payload = pickle.load(f)
+            payload = _MainRedirectUnpickler(f).load()
         if payload.get("schema_version") != SCHEMA_VERSION:
             raise ValueError(
                 f"Model bundle schema ({payload.get('schema_version')}) != {SCHEMA_VERSION}"

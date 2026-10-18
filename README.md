@@ -64,9 +64,9 @@ This repository implements a production-grade, mathematically grounded solution 
 
 ---
 
-## 2. Five-Stage Modular Architecture
+## 2. Six-Stage Modular Architecture
 
-The codebase is structured into five self-verifying, zero-leakage pipeline modules:
+The codebase is structured into six self-verifying, zero-leakage pipeline modules:
 
 ### [Task 1: Schema Validation & Preprocessing](file:///task1_schema_and_preprocessing.py)
 * **Strict Temporal Parameterization in Seconds:** Converts all windows and derivative steps dynamically using timestamps and sampling rate $f_s$, guaranteeing identical physical behavior at $25\text{ Hz}$ or $50\text{ Hz}$.
@@ -94,6 +94,11 @@ The codebase is structured into five self-verifying, zero-leakage pipeline modul
 * **Outlier-Resistant Tactical Geometry Priors:** Combines outfield Convex Hull area with interquartile spatial dispersion normalized to canonical attacking direction.
 * **1-to-1 Bipartite Turnover Matching:** Greedy temporal matching ($\pm 250\text{ ms}$) within continuous valid ball segments to calculate Turnover F1, precision, recall, and signed timing error in milliseconds.
 * **Diagnostic Failure Slice Reporting:** Evaluates frame accuracy across specific high-risk slices (unreliable proximity pass-bys, interpolated gaps, contested 50/50 windows, and segment boundaries).
+
+### [Task 6: Match Visualizer & Diagnostic Plotter](file:///task6_match_visualizer.py)
+* **Multi-Panel Tactical Dashboard:** Renders a 3-panel professional match visualizer combining a 2D pitch view (with FC Barcelona Blaugrana color styling, metric coordinates, player IDs, and ball tracking), sequence-level posterior probability curves with ground truth and shaded possession dominance, and kinematic discontinuities ($I_b$, aerial/pass-by likelihood, bridge agreement, and Jev refiner activations).
+* **Defensive Schema Ingestion:** Automatically inspects frame columns with graceful fallbacks for raw predictions, competition test sets (missing ground truth), or binary submission tables.
+* **Headless & Scalable Execution:** Native `matplotlib.use("Agg")` rendering, robust pickle unpickling, and optional temporal window zooming (`time_window_s=(t_start, t_end)`).
 
 ---
 
@@ -138,7 +143,7 @@ python -m venv .venv
 # source .venv/bin/activate
 
 # Install required dependencies
-pip install numpy pandas scipy scikit-learn
+pip install numpy pandas scipy scikit-learn matplotlib
 ```
 
 ### Running the Verification Suites
@@ -160,6 +165,9 @@ python task4_classifier_and_decoder.py
 
 # Verify Task 5: Diagnostic metrics, edge-case slices & full 6-stage ablation
 python task5_evaluation_and_ablation.py
+
+# Verify Task 6: Match visualizer & 3-panel tactical diagnostic dashboard
+python task6_match_visualizer.py
 ```
 
 ### End-to-End Submission CLI (`run_submission_pipeline.py`)
@@ -212,6 +220,7 @@ The unified execution script [`run_submission_pipeline.py`](file:///run_submissi
 ├── task3_anchors_and_bridges.py           # Anchors, bounded bridges & Jev refiner
 ├── task4_classifier_and_decoder.py        # Team-swap GBDT & Soft Viterbi decoder
 ├── task5_evaluation_and_ablation.py       # Metrics, turnover matching & ablation runner
+├── task6_match_visualizer.py              # 2D pitch & multi-panel diagnostic dashboard
 ├── .gitignore                             # Ignored caches and virtual environments
 └── README.md                              # Project documentation & benchmark overview
 ```
