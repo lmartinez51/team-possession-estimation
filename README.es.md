@@ -318,17 +318,25 @@ Start-Process artifacts\visualizations\viewer.html
 .\.venv\Scripts\python.exe generate_3d_replay_html.py --standalone
 ```
 
-#### Arquitectura y Recarga en Caliente (Hot-Reload):
+#### Arquitectura, Características Visuales y Motor Zero-GC:
 * **Frontend Desacoplado y Zero-CORS:** El código visual reside en `artifacts/visualizations/viewer.html`, estrictamente separado de `match_payload.js` (`window.MATCH_DATA = {...};`) y `match_payload.json`. Evita las restricciones locales de CORS de los navegadores al abrir directamente con doble clic vía `file://`.
 * **Guardia Anti-Sobrescritura:** Ejecutar Python actualiza siempre los datos del partido preservando cualquier edición visual o de Three.js manual en `viewer.html` salvo que se especifique `--reset-viewer`.
 * **Recarga en Caliente en la App:** Pulsa **🔄 Recargar Datos** en la barra inferior para refrescar `match_payload.js` en vivo sin perder la vista de cámara ni la velocidad de reproducción.
+* **Faro 3D de Poseedor Activo Estilo EA Sports FC:** Baliza dinámica de alta visibilidad anclada al jugador en posesión, que incluye un anillo pulsante sobre el césped, un cilindro de aura de foco cenital (`ConeGeometry`) y un diamante flotante. Los aros en los pies de los jugadores sin balón se atenúan a una opacidad sutil de `0.22`, eliminando la saturación visual en la cancha. Se adapta dinámicamente tanto en **🧠 Nuestra IA** (dueño probabilístico) como en **🤖 IA Común** (jugador más cercano).
+* **Vínculo Volumétrico de Control (Cadena de Cuentas de Energía):** Sustituye las líneas alámbricas 2D de 1px por una cadena de 16 esferas volumétricas 3D a lo largo de un arco parabólico animado que conecta el pecho del poseedor legítimo con la trayectoria del balón.
+* **Estela de Cometa 3D Inmune al Desplazamiento (Scrub-Safe):** 18 esferas graduadas que trazan la estela del balón mediante muestreo temporal sub-frame fraccional, manteniéndose completamente estable durante el rebobinado rápido y escalando su longitud de acuerdo con la velocidad del esférico.
+* **Halo de Posesión Radiante en el Césped:** Anillo luminoso directamente debajo de la sombra del balón que pulsa con el color del equipo en posesión (degradado blaugrana para el FC Barcelona vs. cian para el rival).
+* **Pulso Neuronal Violeta de Jev AI (System One):** Cuando Jev resuelve un toque dividido al límite (`f0.jev === 1`), un giroscopio 3D violeta de doble anillo contra-rotatorio (`#A855F7`) se activa con una suave persistencia visual de 0.45s para que los juicios de un solo cuadro sean perfectamente apreciables por el espectador.
+* **Tarjeta HUD de Jugador Activo Estilo TV Broadcast:** Gráfico televisivo anclado bajo el marcador superior que muestra el escudo del club, dorsal grande y legible (`#10`) y etiqueta de estado de control en tiempo real (*CONTROL TOTAL*, *DISPUTADA*, etc.).
+* **Marcadores de Pérdida/Recuperación en la Línea de Tiempo (Pips):** Marcas interactivas superpuestas sobre la barra de tiempo (pips dorados para robos/cambios de posesión y pips violetas para intervenciones de Jev AI) con tooltips descriptivos y navegación instantánea al hacer clic.
+* **Bucle de Renderizado 100% Zero-GC a 60 FPS:** Motor de animación de alto rendimiento libre de recolección de basura mediante vectores y colores de trabajo preasignados (`_scratchV3`, `_scratchTarget`, `_scratchColorJev`, `_scratchP1Map`), erradicando micro-tirones y caídas de cuadros.
+* **Liberación Rigurosa de Recursos GPU:** Limpieza profunda con llamadas explícitas a `.dispose()` en geometrías, materiales y texturas de sprites de canvas al recargar partidos o cambiar de dataset.
 * **API Global de Control IA (`window.PossessionViewerAPI`):** Preparada para integración con Gemini Live y agentes multimodales:
   - `getCurrentFrameState()`: Devuelve el cuadro activo, coordenadas 3D del balón interpoladas, equipo en posesión y eventos tácticos.
   - `captureCanvasBase64()`: Devuelve `renderer.domElement.toDataURL('image/jpeg', 0.8)` (`preserveDrawingBuffer: true`).
   - `setCameraMode(mode)`, `setBrainMode(mode)`, `setSpeed(speed)`, `seekToSecond(sec)`, `togglePlay()`.
 * **Conmutador de Comparación de IA:** Alterna en tiempo real entre **🧠 Nuestra IA** (Viterbi + Jev) y la **🤖 IA Común** (heurística de jugador más cercano).
 * **Escudo 3D Anti-Robo (Pass Shield):** Una esfera alámbrica dorada que protege el balón en pases filtrados de alta velocidad cuando cruza cerca de rivales sin ser interceptado.
-* **Hilo Dorado de Control:** Curva de Bézier 3D que une en todo momento al poseedor legítimo con la pelota.
 * **4 Perspectivas de Cámara:**
   - 🎥 **Cámara TV:** Seguimiento suave de la acción de retransmisión.
   - 🚁 **Dron Cercano:** Enfoque cinemático de seguimiento a baja altura.

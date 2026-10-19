@@ -327,7 +327,7 @@ def build_fan_friendly_3d_payload(
     }
 
 
-BASELINE_VIEWER_HTML = """<!DOCTYPE html>
+BASELINE_VIEWER_HTML = r"""<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -417,6 +417,125 @@ BASELINE_VIEWER_HTML = """<!DOCTYPE html>
     .legend-item { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; line-height: 1.25; color: #E2E8F0; }
     .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 
+    /* TV-STYLE ACTIVE CARRIER HUD CARD */
+    #carrier-hud-card {
+      position: absolute; right: 16px; top: 165px; z-index: 10; width: 285px;
+      background: rgba(7, 11, 25, 0.88); border-radius: 12px;
+      padding: 12px 14px; backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-left: 5px solid var(--barca-gold);
+      transition: all 0.25s ease-out;
+    }
+    .carrier-card-title {
+      font-size: 10px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.8px; color: #94A3B8; margin-bottom: 6px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .carrier-main-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .carrier-badge-wrap {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .carrier-crest {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900; color: #FFF; flex-shrink: 0;
+      border: 2px solid var(--barca-gold);
+      box-shadow: 0 0 12px rgba(237,187,0,0.4);
+      background: conic-gradient(#004D98 0deg 180deg, #A50044 180deg 360deg);
+      transition: all 0.25s;
+    }
+    .carrier-text-info { display: flex; flex-direction: column; }
+    .carrier-player-num { font-size: 15px; font-weight: 900; color: #FFF; }
+    .carrier-team-lbl { font-size: 11px; color: #CBD5E1; font-weight: 600; }
+    .carrier-jersey-circle {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: rgba(255,255,255,0.08); border: 2px solid var(--barca-gold);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 900; color: var(--barca-gold);
+      box-shadow: 0 0 10px rgba(237,187,0,0.3);
+      transition: all 0.25s;
+    }
+    .carrier-accent-bar {
+      width: 100%; height: 3px; border-radius: 2px; margin: 8px 0;
+      background: linear-gradient(90deg, #004D98, #A50044, #EDBB00);
+      transition: background 0.25s;
+    }
+    .carrier-status-row {
+      display: flex; justify-content: space-between; align-items: center; font-size: 11px;
+    }
+    .carrier-status-badge {
+      font-weight: 800; font-size: 11px; padding: 3px 9px; border-radius: 99px;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    /* TIMELINE OVERLAY PIPS TRACK */
+    .timeline-container {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      min-width: 180px;
+      height: 32px;
+    }
+    #timeline-pips-track {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .timeline-pip {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 4px;
+      height: 18px;
+      border-radius: 2px;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: transform 0.15s, height 0.15s;
+    }
+    .timeline-pip:hover {
+      transform: translate(-50%, -50%) scale(1.5);
+      height: 24px;
+      z-index: 10;
+    }
+    .pip-home {
+      background: var(--barca-gold);
+      box-shadow: 0 0 8px rgba(237, 187, 0, 0.95);
+    }
+    .pip-away {
+      background: var(--rival-cyan);
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.95);
+    }
+    .pip-jev {
+      background: #A855F7;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 1.0);
+      width: 5px;
+      height: 20px;
+    }
+    .chip-btn.chip-jev {
+      background: rgba(168, 85, 247, 0.45);
+      border-color: #A855F7;
+    }
+    .chip-btn.chip-jev:hover {
+      background: #A855F7;
+      color: #FFF;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.7);
+    }
+
+    @media (max-width: 900px) {
+      .legend-card { display: none; }
+      #carrier-hud-card {
+        top: auto; bottom: 135px; right: 16px; width: min(92vw, 290px);
+      }
+    }
+
     /* BOTTOM PLAYBACK & CAMERA DOCK */
     .hud-bottom {
       position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
@@ -480,7 +599,7 @@ BASELINE_VIEWER_HTML = """<!DOCTYPE html>
       El visor 3D requiere el archivo <code>match_payload.js</code> en el mismo directorio.<br>
       Ejecuta en tu terminal el generador de repeticiones para exportar la jugada:
     </p>
-    <pre style="background: #070B19; border: 1px solid rgba(237,187,0,0.4); border-radius: 8px; padding: 12px; font-size: 13px; color: #60A5FA; overflow-x: auto; margin-bottom: 24px; text-align: left;">.\\.venv\\Scripts\\python.exe generate_3d_replay_html.py</pre>
+    <pre style="background: #070B19; border: 1px solid rgba(237,187,0,0.4); border-radius: 8px; padding: 12px; font-size: 13px; color: #60A5FA; overflow-x: auto; margin-bottom: 24px; text-align: left;">.\.venv\Scripts\python.exe generate_3d_replay_html.py</pre>
     <button class="ctrl-btn ctrl-btn-reload" style="padding: 10px 24px; font-size: 14px; border-radius: 99px;" onclick="reloadDataPayload()">
       🔄 Reintentar Carga
     </button>
@@ -531,9 +650,32 @@ BASELINE_VIEWER_HTML = """<!DOCTYPE html>
   <div class="legend-title">Guía Rápida para el Aficionado</div>
   <div class="legend-item"><span class="dot" style="background:#A50044; border:2px solid #EDBB00;"></span><span><b>FC Barcelona (Azulgrana):</b> Equipo local atacando.</span></div>
   <div class="legend-item"><span class="dot" style="background:#00E5FF; border:2px solid #FFF;"></span><span><b>Equipo Rival (Blanco/Cian):</b> Equipo visitante.</span></div>
-  <div class="legend-item"><span class="dot" style="background:#EDBB00; box-shadow:0 0 8px #EDBB00;"></span><span><b>Hilo Dorado de Control:</b> Une al dueño de la jugada con el balón.</span></div>
+  <div class="legend-item"><span class="dot" style="background:#EDBB00; box-shadow:0 0 8px #EDBB00;"></span><span><b>Baliza 3D y Esferas de Energía:</b> Identifica al poseedor activo y el hilo hacia el balón.</span></div>
   <div class="legend-item"><span class="dot" style="background:transparent; border:2px dashed #EDBB00;"></span><span><b>Escudo 3D Anti-Robo:</b> Protege los pases que pasan cerca de rivales sin ser tocados.</span></div>
   <div class="legend-item"><span class="dot" style="background:#A855F7;"></span><span><b>Destello Violeta (Jev AI):</b> Desempate inteligente en jugadas divididas.</span></div>
+</div>
+
+<!-- TV-STYLE ACTIVE CARRIER HUD CARD -->
+<div id="carrier-hud-card">
+  <div class="carrier-card-title">
+    <span>📡 Poseedor Activo del Balón</span>
+    <span id="carrier-brain-tag" style="color:var(--barca-gold); font-size:9px; font-weight:800;">NUESTRA IA</span>
+  </div>
+  <div class="carrier-main-row">
+    <div class="carrier-badge-wrap">
+      <div id="carrier-crest" class="carrier-crest">FCB</div>
+      <div class="carrier-text-info">
+        <div id="carrier-player-title" class="carrier-player-num">Dorsal #10</div>
+        <div id="carrier-team-name" class="carrier-team-lbl">FC Barcelona (Local)</div>
+      </div>
+    </div>
+    <div id="carrier-jersey-box" class="carrier-jersey-circle">#10</div>
+  </div>
+  <div id="carrier-accent-bar" class="carrier-accent-bar"></div>
+  <div class="carrier-status-row">
+    <span style="color:#94A3B8; font-weight:700;">ESTADO DE CONTROL:</span>
+    <span id="carrier-status-badge" class="carrier-status-badge" style="background:rgba(34,197,94,0.25); border:1px solid #22C55E; color:#4ADE80;">EN CONTROL</span>
+  </div>
 </div>
 
 <!-- BOTTOM CONTROLS & NARRATOR -->
@@ -548,7 +690,10 @@ BASELINE_VIEWER_HTML = """<!DOCTYPE html>
       <button class="ctrl-btn" onclick="stepFrames(-25)">⏪ -1s</button>
       <button class="ctrl-btn" onclick="stepFrames(25)">⏩ +1s</button>
     </div>
-    <input id="timeline-slider" type="range" min="0" max="100" value="0" step="0.1" oninput="onSliderInput(this.value)">
+    <div class="timeline-container">
+      <div id="timeline-pips-track"></div>
+      <input id="timeline-slider" type="range" min="0" max="100" value="0" step="0.1" oninput="onSliderInput(this.value)">
+    </div>
     <div class="btn-group">
       <button id="spd-025" class="ctrl-btn" onclick="setSpeed(0.25)">0.25x</button>
       <button id="spd-05" class="ctrl-btn" onclick="setSpeed(0.5)">0.5x</button>
@@ -593,6 +738,12 @@ scene.fog = new THREE.FogExp2(0x050814, 0.0045);
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 400);
 camera.position.set(0, 46, 62);
 const cameraTarget = new THREE.Vector3(0, 0, 0);
+
+// --- ZERO-GC VECTOR & COLOR SCRATCHPAD FOR 60 FPS RENDER LOOP ---
+const _scratchV3 = new THREE.Vector3();
+const _scratchTarget = new THREE.Vector3();
+const _scratchColorJev = new THREE.Color(0xA855F7);
+const _scratchP1Map = {};
 
 // Renderer with preserveDrawingBuffer enabled for canvas toDataURL captures
 const renderer = new THREE.WebGLRenderer({
@@ -739,6 +890,28 @@ ballGroup.add(shieldMesh);
 const ballLight = new THREE.PointLight(0xEDBB00, 2.2, 14);
 ballLight.position.set(0, 0.8, 0);
 ballGroup.add(ballLight);
+
+// --- JEV AI (SYSTEM ONE) 3D VIOLET NEURAL GYROSCOPE ---
+const jevPulseGroup = new THREE.Group();
+const jevTorusGeo = new THREE.TorusGeometry(0.92, 0.045, 10, 28);
+const jevRing1Mat = new THREE.MeshBasicMaterial({ color: 0xA855F7, transparent: true, opacity: 0.0, depthWrite: false });
+const jevRing1 = new THREE.Mesh(jevTorusGeo, jevRing1Mat);
+const jevRing2Mat = new THREE.MeshBasicMaterial({ color: 0xA855F7, transparent: true, opacity: 0.0, depthWrite: false });
+const jevRing2 = new THREE.Mesh(jevTorusGeo, jevRing2Mat);
+jevRing2.rotation.y = Math.PI / 2;
+jevPulseGroup.add(jevRing1);
+jevPulseGroup.add(jevRing2);
+
+const jevGroundHexGeo = new THREE.RingGeometry(1.55, 1.95, 6);
+const jevGroundHexMat = new THREE.MeshBasicMaterial({ color: 0xA855F7, side: THREE.DoubleSide, transparent: true, opacity: 0.0, depthWrite: false });
+const jevGroundHex = new THREE.Mesh(jevGroundHexGeo, jevGroundHexMat);
+jevGroundHex.rotation.x = -Math.PI / 2;
+jevPulseGroup.add(jevGroundHex);
+
+jevPulseGroup.visible = false;
+ballGroup.add(jevPulseGroup);
+let jevVisualAlpha = 0.0;
+
 scene.add(ballGroup);
 
 // Ground drop shadow directly below the elevated ball
@@ -749,13 +922,106 @@ const ballShadow = new THREE.Mesh(
 ballShadow.rotation.x = -Math.PI / 2; ballShadow.position.y = 0.03;
 scene.add(ballShadow);
 
+// Glowing Ground Possession Halo on the turf directly beneath the ball (complementing ballShadow)
+const ballGroundHalo = new THREE.Mesh(
+  new THREE.RingGeometry(0.68, 1.55, 32),
+  new THREE.MeshBasicMaterial({ color: 0xEDBB00, side: THREE.DoubleSide, transparent: true, opacity: 0.55, depthWrite: false })
+);
+ballGroundHalo.rotation.x = -Math.PI / 2;
+ballGroundHalo.position.y = 0.035;
+scene.add(ballGroundHalo);
+
+// --- SCRUB-SAFE 3D BALL COMET MOTION TRAIL ---
+const BALL_TRAIL_COUNT = 18;
+const ballTrailGroup = new THREE.Group();
+const trailGeo = new THREE.SphereGeometry(0.32, 12, 12);
+const trailSpheres = [];
+for (let k = 0; k < BALL_TRAIL_COUNT; k++) {
+  const trailMat = new THREE.MeshBasicMaterial({
+    color: 0xEDBB00,
+    transparent: true,
+    opacity: 0.0,
+    depthWrite: false
+  });
+  const trailMesh = new THREE.Mesh(trailGeo, trailMat);
+  trailMesh.visible = false;
+  ballTrailGroup.add(trailMesh);
+  trailSpheres.push(trailMesh);
+}
+scene.add(ballTrailGroup);
+
 // Curved 3D Control Tether ('Hilo Dorado de Control') from owner to ball
 const tetherPoints = [];
 for (let i = 0; i <= 20; i++) tetherPoints.push(new THREE.Vector3());
 const tetherGeo = new THREE.BufferGeometry().setFromPoints(tetherPoints);
-const tetherMat = new THREE.LineBasicMaterial({ color: 0xEDBB00, linewidth: 3 });
+const tetherMat = new THREE.LineBasicMaterial({ color: 0xEDBB00, linewidth: 3, transparent: true, opacity: 0.35 });
 const tetherLine = new THREE.Line(tetherGeo, tetherMat);
 scene.add(tetherLine);
+
+// --- 3D VOLUMETRIC ANIMATED ENERGY BEAD CHAIN TETHER ---
+const TETHER_BEADS_COUNT = 16;
+const tetherBeadsGroup = new THREE.Group();
+const tetherBeads = [];
+const beadGeo = new THREE.SphereGeometry(0.16, 10, 10);
+for (let i = 0; i < TETHER_BEADS_COUNT; i++) {
+  const beadMat = new THREE.MeshStandardMaterial({
+    color: 0xEDBB00,
+    emissive: 0xEDBB00,
+    emissiveIntensity: 0.85,
+    roughness: 0.15
+  });
+  const beadMesh = new THREE.Mesh(beadGeo, beadMat);
+  beadMesh.visible = false;
+  tetherBeadsGroup.add(beadMesh);
+  tetherBeads.push(beadMesh);
+}
+tetherBeadsGroup.visible = false;
+scene.add(tetherBeadsGroup);
+
+// --- EA SPORTS FC STYLE 3D ACTIVE CARRIER BEACON ---
+const ownerBeaconGroup = new THREE.Group();
+
+// 1. Outer Pulsing Ground Ring
+const beaconRingGeo = new THREE.RingGeometry(0.95, 1.35, 32);
+const beaconRingMat = new THREE.MeshBasicMaterial({
+  color: 0xEDBB00,
+  side: THREE.DoubleSide,
+  transparent: true,
+  opacity: 0.9
+});
+const beaconRing = new THREE.Mesh(beaconRingGeo, beaconRingMat);
+beaconRing.rotation.x = -Math.PI / 2;
+beaconRing.position.y = 0.05;
+ownerBeaconGroup.add(beaconRing);
+
+// 2. Vertical Spotlight Aura Cylinder (open-ended)
+const beaconAuraGeo = new THREE.CylinderGeometry(0.85, 0.85, 3.2, 24, 1, true);
+const beaconAuraMat = new THREE.MeshBasicMaterial({
+  color: 0xEDBB00,
+  side: THREE.DoubleSide,
+  transparent: true,
+  opacity: 0.18,
+  depthWrite: false
+});
+const beaconAura = new THREE.Mesh(beaconAuraGeo, beaconAuraMat);
+beaconAura.position.y = 1.6;
+ownerBeaconGroup.add(beaconAura);
+
+// 3. Floating 3D Diamond / Chevron Marker Above Head
+const beaconDiamondGeo = new THREE.OctahedronGeometry(0.48, 0);
+const beaconDiamondMat = new THREE.MeshStandardMaterial({
+  color: 0xEDBB00,
+  emissive: 0xEDBB00,
+  emissiveIntensity: 0.8,
+  roughness: 0.1
+});
+const beaconDiamond = new THREE.Mesh(beaconDiamondGeo, beaconDiamondMat);
+beaconDiamond.position.y = 4.1;
+beaconDiamond.castShadow = true;
+ownerBeaconGroup.add(beaconDiamond);
+
+ownerBeaconGroup.visible = false;
+scene.add(ownerBeaconGroup);
 
 // Expanding Shockwave Ring on Touches & Turnovers
 const shockRing = new THREE.Mesh(
@@ -791,17 +1057,84 @@ function initMatchData(data) {
     }
   }
 
-  // Populate turnover chips
+  // Populate Visual Timeline Turnover Markers on Slider Track & Key Event Chips
+  const pipsContainer = document.getElementById('timeline-pips-track');
   const chipsRow = document.getElementById('turnover-chips-row');
+  if (pipsContainer) pipsContainer.innerHTML = '';
+  if (chipsRow) chipsRow.innerHTML = '<span>⚡ Saltar a momentos clave:</span>';
+
+  const timelineEvents = [];
+  const seenFrames = new Set();
+
+  if (data.turnovers && data.turnovers.length > 0) {
+    data.turnovers.forEach((to) => {
+      timelineEvents.push({
+        frame_idx: to.frame_idx,
+        type: 'TURNOVER',
+        team: to.team,
+        label: to.label || `${(to.timestamp_s || to.frame_idx / fps).toFixed(1)}s — Robo de Balón (${to.team === 'H' ? 'Barça' : 'Rival'})`
+      });
+      seenFrames.add(to.frame_idx);
+    });
+  }
+
+  // Scan frames for key transitions and Jev AI activations
+  if (data.frames) {
+    let prevJev = 0;
+    data.frames.forEach((f, idx) => {
+      if (f.ev && f.ev.startsWith('TURNOVER') && !seenFrames.has(idx)) {
+        timelineEvents.push({
+          frame_idx: idx,
+          type: 'TURNOVER',
+          team: f.ot,
+          label: `${f.t.toFixed(1)}s — ⚡ Recuperación (${f.ot === 'H' ? 'Barça' : 'Rival'})`
+        });
+        seenFrames.add(idx);
+      } else if (f.jev === 1 && prevJev === 0 && !seenFrames.has(idx)) {
+        timelineEvents.push({
+          frame_idx: idx,
+          type: 'JEV',
+          team: f.ot,
+          label: `${f.t.toFixed(1)}s — 🧠 Jev AI: Jugada Dividida`
+        });
+        seenFrames.add(idx);
+      }
+      prevJev = f.jev;
+    });
+  }
+
+  timelineEvents.sort((a, b) => a.frame_idx - b.frame_idx);
+
+  // Overlay pips on slider track
+  if (pipsContainer && totalFrames > 1) {
+    timelineEvents.forEach((evt) => {
+      const pct = (evt.frame_idx / (totalFrames - 1)) * 100.0;
+      const pip = document.createElement('div');
+      pip.className = `timeline-pip ${evt.type === 'JEV' ? 'pip-jev' : (evt.team === 'H' ? 'pip-home' : 'pip-away')}`;
+      pip.style.left = `${pct}%`;
+      pip.title = evt.label;
+      pip.onclick = (e) => {
+        e.stopPropagation();
+        currentFrameFloat = evt.frame_idx;
+        if (slider) slider.value = currentFrameFloat;
+        triggerEventToast(
+          evt.label,
+          evt.type === 'JEV' ? 'linear-gradient(90deg,#9333EA,#A855F7)' : (evt.team === 'H' ? 'linear-gradient(90deg,#004D98,#A50044)' : '#0284C7')
+        );
+      };
+      pipsContainer.appendChild(pip);
+    });
+  }
+
+  // Populate interactive chips
   if (chipsRow) {
-    chipsRow.innerHTML = "<span>⚡ Saltar a momentos clave:</span>";
-    if (data.turnovers && data.turnovers.length > 0) {
-      data.turnovers.forEach((to) => {
+    if (timelineEvents.length > 0) {
+      timelineEvents.forEach((evt) => {
         const btn = document.createElement('button');
-        btn.className = 'chip-btn';
-        btn.innerText = to.label;
+        btn.className = `chip-btn ${evt.type === 'JEV' ? 'chip-jev' : ''}`;
+        btn.innerText = evt.label;
         btn.onclick = () => {
-          currentFrameFloat = Math.max(0, to.frame_idx - 18);
+          currentFrameFloat = Math.max(0, evt.frame_idx - (evt.type === 'JEV' ? 8 : 18));
           if (slider) slider.value = currentFrameFloat;
         };
         chipsRow.appendChild(btn);
@@ -818,10 +1151,29 @@ function initMatchData(data) {
     }
   }
 
-  // Clear existing players and build new roster meshes
+  // Clear existing players and build new roster meshes with thorough GPU resource disposal
   for (const idx in playerMeshes) {
-    if (playerMeshes[idx] && playerMeshes[idx].group) {
-      scene.remove(playerMeshes[idx].group);
+    const pm = playerMeshes[idx];
+    if (pm && pm.group) {
+      pm.group.traverse((child) => {
+        if (child.isMesh || child.isSprite) {
+          if (child.geometry) {
+            child.geometry.dispose();
+          }
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach((mat) => {
+                if (mat.map) mat.map.dispose();
+                mat.dispose();
+              });
+            } else {
+              if (child.material.map) child.material.map.dispose();
+              child.material.dispose();
+            }
+          }
+        }
+      });
+      scene.remove(pm.group);
     }
   }
   playerMeshes = {};
@@ -856,7 +1208,12 @@ function initMatchData(data) {
 
       const ring = new THREE.Mesh(
         new THREE.RingGeometry(0.55, 0.78, 24),
-        new THREE.MeshBasicMaterial({ color: isHome ? 0xEDBB00 : 0x00E5FF, side: THREE.DoubleSide })
+        new THREE.MeshBasicMaterial({
+          color: isHome ? 0xEDBB00 : 0x00E5FF,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.22
+        })
       );
       ring.rotation.x = -Math.PI / 2; ring.position.y = 0.04;
       grp.add(ring);
@@ -864,7 +1221,7 @@ function initMatchData(data) {
       grp.add(makeNumberSprite(p.num, p.team, p.gk));
       grp.visible = false;
       scene.add(grp);
-      playerMeshes[p.idx] = { group: grp, ring: ring, team: p.team };
+      playerMeshes[p.idx] = { group: grp, ring: ring, torso: torso, team: p.team, num: p.num };
     });
   }
 }
@@ -1118,6 +1475,68 @@ function animate(now) {
   ballMesh.material.emissive.setHex(goldOrCyanHex);
   ballLight.color.setHex(teamColorHex);
 
+  // Glowing Ground Possession Halo on the turf directly beneath the ball (complementing ballShadow)
+  if (f0.v === 1) {
+    ballGroundHalo.visible = true;
+    ballGroundHalo.position.set(bx, 0.035, bz_pitch);
+    ballGroundHalo.material.color.setHex(teamColorHex);
+    const haloPulse = 1.0 + 0.12 * Math.sin(now * 0.007);
+    ballGroundHalo.scale.set(haloPulse, haloPulse, 1);
+  } else {
+    ballGroundHalo.visible = false;
+  }
+
+  // Jev AI (System One) 3D Violet Neural Gyroscope with persistence (~0.45s decay)
+  if (brainMode === 'OUR' && f0.jev === 1 && f0.v === 1) {
+    jevVisualAlpha = 1.0;
+  } else {
+    jevVisualAlpha = Math.max(0.0, jevVisualAlpha - dt * 2.2);
+  }
+
+  if (jevVisualAlpha > 0.01) {
+    jevPulseGroup.visible = true;
+    jevRing1.rotation.x += dt * 5.0;
+    jevRing1.rotation.y += dt * 3.5;
+    jevRing2.rotation.y += dt * 5.0;
+    jevRing2.rotation.z += dt * 2.8;
+    jevGroundHex.rotation.z += dt * 2.0;
+    jevRing1Mat.opacity = jevVisualAlpha * 0.9;
+    jevRing2Mat.opacity = jevVisualAlpha * 0.9;
+    jevGroundHexMat.opacity = jevVisualAlpha * 0.75;
+    jevGroundHex.position.y = 0.04 - by_elev;
+    ballLight.color.lerp(_scratchColorJev, Math.min(1.0, jevVisualAlpha * 1.2));
+  } else {
+    jevPulseGroup.visible = false;
+  }
+
+  // Scrub-Safe 3D Comet Motion Trail (Anti-Glitch Timeline Sampling)
+  if (f0.v === 1) {
+    ballTrailGroup.visible = true;
+    const speedFactor = Math.min(1.0, (f0.spd || 0) / 10.0);
+    const trailColorHex = (jevVisualAlpha > 0.05) ? 0xA855F7 : goldOrCyanHex;
+    for (let k = 1; k <= BALL_TRAIL_COUNT; k++) {
+      const trailFloat = Math.max(0.0, currentFrameFloat - k * 0.45);
+      const t0 = Math.floor(trailFloat);
+      const t1 = Math.min(totalFrames - 1, t0 + 1);
+      const tAlpha = trailFloat - t0;
+      const tf0 = window.MATCH_DATA.frames[t0];
+      const tf1 = window.MATCH_DATA.frames[t1] || tf0;
+      const tx = tf0.bx + (tf1.bx - tf0.bx) * tAlpha;
+      const tz = -(tf0.by + (tf1.by - tf0.by) * tAlpha);
+      const ty = tf0.bz + (tf1.bz - tf0.bz) * tAlpha;
+
+      const trailNode = trailSpheres[k - 1];
+      trailNode.position.set(tx, ty, tz);
+      const taper = 1.0 - k / (BALL_TRAIL_COUNT + 1);
+      trailNode.scale.set(taper, taper, taper);
+      trailNode.material.opacity = taper * speedFactor * 0.75;
+      trailNode.material.color.setHex(trailColorHex);
+      trailNode.visible = (speedFactor > 0.02);
+    }
+  } else {
+    ballTrailGroup.visible = false;
+  }
+
   // Pass Shield animation
   shieldMesh.visible = (brainMode === 'OUR' && f0.sh === 1);
   if (shieldMesh.visible) {
@@ -1125,10 +1544,37 @@ function animate(now) {
     shieldMesh.rotation.x += dt * 1.8;
   }
 
-  // Update players & interpolate positions
+  // Update players & interpolate positions (Zero-GC using reusable _scratchP1Map)
   Object.values(playerMeshes).forEach(pm => { pm.group.visible = false; });
-  const p1Map = {};
-  f1.p.forEach(item => { p1Map[item[0]] = item; });
+  for (const k in _scratchP1Map) delete _scratchP1Map[k];
+  f1.p.forEach(item => { _scratchP1Map[item[0]] = item; });
+
+  // Dynamic Owner Resolution for OUR vs NAIVE brain modes
+  let activeOwnerIdx = f0.own;
+  if (brainMode === 'NAIVE') {
+    let minBallDist = Infinity;
+    let closestPIdx = -1;
+    f0.p.forEach(item => {
+      const pIdx = item[0];
+      let px = item[1], py = item[2];
+      if (_scratchP1Map[pIdx]) {
+        px += (_scratchP1Map[pIdx][1] - px) * alpha;
+        py += (_scratchP1Map[pIdx][2] - py) * alpha;
+      }
+      const dist = Math.hypot(px - bx, -py - bz_pitch);
+      if (dist < minBallDist) {
+        minBallDist = dist;
+        closestPIdx = pIdx;
+      }
+    });
+    if (closestPIdx >= 0) {
+      activeOwnerIdx = closestPIdx;
+    }
+  }
+
+  const activeOwnerTeam = (playerMeshes[activeOwnerIdx] && brainMode === 'NAIVE') ?
+    playerMeshes[activeOwnerIdx].team : activeTeam;
+  const activeOwnerColorHex = (activeOwnerTeam === 'H') ? 0xEDBB00 : 0x00E5FF;
 
   let ownerPos = null;
   f0.p.forEach(item => {
@@ -1136,25 +1582,49 @@ function animate(now) {
     const pm = playerMeshes[pIdx];
     if (!pm) return;
     let px = item[1], py = item[2];
-    if (p1Map[pIdx]) {
-      px += (p1Map[pIdx][1] - px) * alpha;
-      py += (p1Map[pIdx][2] - py) * alpha;
+    if (_scratchP1Map[pIdx]) {
+      px += (_scratchP1Map[pIdx][1] - px) * alpha;
+      py += (_scratchP1Map[pIdx][2] - py) * alpha;
     }
     pm.group.position.set(px, 0, -py);
     pm.group.visible = true;
 
-    if (pIdx === f0.own) {
+    if (pIdx === activeOwnerIdx) {
       ownerPos = pm.group.position;
-      pm.ring.scale.set(1.45, 1.45, 1);
+      pm.ring.material.opacity = 0.95;
+      pm.ring.scale.set(1.5, 1.5, 1);
     } else {
+      pm.ring.material.opacity = 0.22;
       pm.ring.scale.set(1.0, 1.0, 1);
     }
   });
 
-  // Update 3D Control Tether arc from owner to ball
+  // Update EA Sports FC Style 3D Active Carrier Beacon
+  if (ownerPos && f0.v === 1) {
+    ownerBeaconGroup.visible = true;
+    ownerBeaconGroup.position.copy(ownerPos);
+
+    // Dynamic Team Colors
+    beaconRingMat.color.setHex(activeOwnerColorHex);
+    beaconAuraMat.color.setHex(activeOwnerColorHex);
+    beaconDiamondMat.color.setHex(activeOwnerColorHex);
+    beaconDiamondMat.emissive.setHex(activeOwnerColorHex);
+
+    // Floating diamond rotation & vertical bobbing
+    beaconDiamond.rotation.y += dt * 3.5;
+    beaconDiamond.position.y = 4.1 + Math.sin(now * 0.006) * 0.22;
+
+    // Ground ring pulsing
+    const ringPulse = 1.0 + 0.18 * Math.sin(now * 0.008);
+    beaconRing.scale.set(ringPulse, ringPulse, 1);
+  } else {
+    ownerBeaconGroup.visible = false;
+  }
+
+  // Update 3D Volumetric Animated Control Tether (Energy Bead Chain + guide line)
   if (ownerPos && f0.v === 1) {
     tetherLine.visible = true;
-    tetherMat.color.setHex(goldOrCyanHex);
+    tetherMat.color.setHex(activeOwnerColorHex);
     const posAttr = tetherGeo.attributes.position;
     for (let i = 0; i <= 20; i++) {
       const u = i / 20.0;
@@ -1164,8 +1634,29 @@ function animate(now) {
       posAttr.setXYZ(i, tx, ty, tz);
     }
     posAttr.needsUpdate = true;
+
+    // Animated volumetric energy bead chain
+    tetherBeadsGroup.visible = true;
+    const flowPhase = (now * 0.0025) % 1.0;
+    for (let i = 0; i < TETHER_BEADS_COUNT; i++) {
+      const bead = tetherBeads[i];
+      bead.visible = true;
+      bead.material.color.setHex(activeOwnerColorHex);
+      bead.material.emissive.setHex(activeOwnerColorHex);
+
+      const u = (i / TETHER_BEADS_COUNT + flowPhase) % 1.0;
+      const tx = ownerPos.x + (bx - ownerPos.x) * u;
+      const tz = ownerPos.z + (bz_pitch - ownerPos.z) * u;
+      const ty = 0.25 + (by_elev - 0.25) * u + Math.sin(u * Math.PI) * 1.35;
+      bead.position.set(tx, ty, tz);
+
+      const arcPulse = 1.0 + 0.55 * Math.sin(u * Math.PI);
+      bead.scale.set(arcPulse, arcPulse, arcPulse);
+    }
   } else {
     tetherLine.visible = false;
+    tetherBeadsGroup.visible = false;
+    tetherBeads.forEach(b => { b.visible = false; });
   }
 
   // Shockwave effect on Touches & Turnovers
@@ -1196,22 +1687,30 @@ function animate(now) {
     shockRing.material.opacity = 0.0;
   }
 
-  // Smooth Camera Controller
+  // Smooth Camera Controller (Zero-GC with scratch vectors)
   if (cameraMode === 'TV') {
-    camera.position.lerp(new THREE.Vector3(bx * 0.45, 38, 54), 0.06);
-    cameraTarget.lerp(new THREE.Vector3(bx * 0.65, 0.5, bz_pitch * 0.45), 0.08);
+    _scratchV3.set(bx * 0.45, 38, 54);
+    _scratchTarget.set(bx * 0.65, 0.5, bz_pitch * 0.45);
+    camera.position.lerp(_scratchV3, 0.06);
+    cameraTarget.lerp(_scratchTarget, 0.08);
   } else if (cameraMode === 'DRONE') {
-    camera.position.lerp(new THREE.Vector3(bx - 14, 15, bz_pitch + 18), 0.08);
-    cameraTarget.lerp(new THREE.Vector3(bx, by_elev, bz_pitch), 0.12);
+    _scratchV3.set(bx - 14, 15, bz_pitch + 18);
+    _scratchTarget.set(bx, by_elev, bz_pitch);
+    camera.position.lerp(_scratchV3, 0.08);
+    cameraTarget.lerp(_scratchTarget, 0.12);
   } else if (cameraMode === 'TOP') {
-    camera.position.lerp(new THREE.Vector3(0, 88, 0.01), 0.08);
-    cameraTarget.lerp(new THREE.Vector3(0, 0, 0), 0.08);
+    _scratchV3.set(0, 88, 0.01);
+    _scratchTarget.set(0, 0, 0);
+    camera.position.lerp(_scratchV3, 0.08);
+    cameraTarget.lerp(_scratchTarget, 0.08);
   } else if (cameraMode === 'FREE') {
     const camX = bx + freeCamDist * Math.sin(freeCamRotY) * Math.cos(freeCamPitch);
     const camY = Math.max(2.0, freeCamDist * Math.sin(freeCamPitch));
     const camZ = bz_pitch + freeCamDist * Math.cos(freeCamRotY) * Math.cos(freeCamPitch);
-    camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.12);
-    cameraTarget.lerp(new THREE.Vector3(bx, by_elev, bz_pitch), 0.12);
+    _scratchV3.set(camX, camY, camZ);
+    _scratchTarget.set(bx, by_elev, bz_pitch);
+    camera.position.lerp(_scratchV3, 0.12);
+    cameraTarget.lerp(_scratchTarget, 0.12);
   }
   camera.lookAt(cameraTarget);
 
@@ -1237,6 +1736,91 @@ function animate(now) {
   } else {
     flkAlert.style.display = 'none';
     document.getElementById('commentary-text').innerText = f0.msg;
+  }
+
+  // Update TV-Style Active Carrier HUD Card
+  const carrierCard = document.getElementById('carrier-hud-card');
+  if (carrierCard && window.MATCH_DATA && window.MATCH_DATA.roster) {
+    const rItem = window.MATCH_DATA.roster[activeOwnerIdx];
+    const pNum = rItem ? rItem.num : (f0.own >= 0 && window.MATCH_DATA.roster[f0.own] ? window.MATCH_DATA.roster[f0.own].num : 10);
+    const pTeam = (rItem && brainMode === 'NAIVE') ? rItem.team : activeTeam;
+    const isHome = (pTeam === 'H');
+
+    const crestEl = document.getElementById('carrier-crest');
+    const titleEl = document.getElementById('carrier-player-title');
+    const teamEl = document.getElementById('carrier-team-name');
+    const jerseyEl = document.getElementById('carrier-jersey-box');
+    const accentEl = document.getElementById('carrier-accent-bar');
+    const statusEl = document.getElementById('carrier-status-badge');
+    const brainTagEl = document.getElementById('carrier-brain-tag');
+
+    if (brainTagEl) {
+      brainTagEl.innerText = (brainMode === 'OUR') ? 'NUESTRA IA' : 'IA COMÚN';
+      brainTagEl.style.color = (brainMode === 'OUR') ? 'var(--barca-gold)' : '#F87171';
+    }
+
+    if (isHome) {
+      carrierCard.style.borderLeftColor = 'var(--barca-gold)';
+      if (crestEl) {
+        crestEl.innerText = 'FCB';
+        crestEl.style.background = 'conic-gradient(#004D98 0deg 180deg, #A50044 180deg 360deg)';
+        crestEl.style.borderColor = 'var(--barca-gold)';
+        crestEl.style.boxShadow = '0 0 12px rgba(237,187,0,0.45)';
+      }
+      if (teamEl) teamEl.innerText = 'FC Barcelona (Local)';
+      if (jerseyEl) {
+        jerseyEl.innerText = `#${pNum}`;
+        jerseyEl.style.borderColor = 'var(--barca-gold)';
+        jerseyEl.style.color = 'var(--barca-gold)';
+      }
+      if (titleEl) titleEl.innerText = `Dorsal #${pNum}${rItem && rItem.gk ? ' (Portero)' : ''}`;
+      if (accentEl) accentEl.style.background = 'linear-gradient(90deg, #004D98, #A50044, #EDBB00)';
+    } else {
+      carrierCard.style.borderLeftColor = 'var(--rival-cyan)';
+      if (crestEl) {
+        crestEl.innerText = 'RIV';
+        crestEl.style.background = 'linear-gradient(135deg, #0284C7, #00E5FF)';
+        crestEl.style.borderColor = 'var(--rival-cyan)';
+        crestEl.style.boxShadow = '0 0 12px rgba(0,229,255,0.45)';
+      }
+      if (teamEl) teamEl.innerText = 'Rival (Visitante)';
+      if (jerseyEl) {
+        jerseyEl.innerText = `#${pNum}`;
+        jerseyEl.style.borderColor = 'var(--rival-cyan)';
+        jerseyEl.style.color = 'var(--rival-cyan)';
+      }
+      if (titleEl) titleEl.innerText = `Dorsal #${pNum}${rItem && rItem.gk ? ' (Portero)' : ''}`;
+      if (accentEl) accentEl.style.background = 'linear-gradient(90deg, #0284C7, #00E5FF)';
+    }
+
+    // Dynamic Role / Status Text
+    if (statusEl) {
+      if (f0.v === 0) {
+        statusEl.innerText = 'SIN CONTROL (BALÓN FUERA)';
+        statusEl.style.background = 'rgba(239, 68, 68, 0.25)';
+        statusEl.style.borderColor = '#EF4444';
+        statusEl.style.color = '#F87171';
+        statusEl.style.boxShadow = 'none';
+      } else if (brainMode === 'OUR' && (f0.jev === 1 || jevVisualAlpha > 0.05)) {
+        statusEl.innerText = 'BALÓN DIVIDIDO (JEV AI)';
+        statusEl.style.background = 'rgba(168, 85, 247, 0.3)';
+        statusEl.style.borderColor = '#A855F7';
+        statusEl.style.color = '#C084FC';
+        statusEl.style.boxShadow = '0 0 10px rgba(168, 85, 247, 0.5)';
+      } else if (brainMode === 'OUR' && (f0.sh === 1 || f0.ev === 'SHIELD')) {
+        statusEl.innerText = 'PASE EN TRÁNSITO';
+        statusEl.style.background = 'rgba(237, 187, 0, 0.25)';
+        statusEl.style.borderColor = '#EDBB00';
+        statusEl.style.color = '#EDBB00';
+        statusEl.style.boxShadow = 'none';
+      } else {
+        statusEl.innerText = 'EN CONTROL';
+        statusEl.style.background = 'rgba(34, 197, 94, 0.25)';
+        statusEl.style.borderColor = '#22C55E';
+        statusEl.style.color = '#4ADE80';
+        statusEl.style.boxShadow = 'none';
+      }
+    }
   }
 
   renderer.render(scene, camera);

@@ -318,17 +318,25 @@ Start-Process artifacts\visualizations\viewer.html
 .\.venv\Scripts\python.exe generate_3d_replay_html.py --standalone
 ```
 
-#### Arquitectura i Recàrrega en Calent (Hot-Reload):
+#### Arquitectura, Característiques Visuals i Motor Zero-GC:
 * **Frontend Desacoblat i Zero-CORS:** El codi visual resideix a `artifacts/visualizations/viewer.html`, estrictament separat de `match_payload.js` (`window.MATCH_DATA = {...};`) i `match_payload.json`. Evita les restriccions locals de CORS dels navegadors en obrir directament amb doble clic via `file://`.
 * **Guàrdia Anti-Sobreescriptura:** Executar Python actualitza sempre les dades del partit preservant qualsevol edició visual o de Three.js manual a `viewer.html` tret que s'especifiqui `--reset-viewer`.
 * **Recàrrega en Calent a l'App:** Prem **🔄 Recargar Datos** a la barra inferior per refrescar `match_payload.js` en viu sense perdre la vista de càmera ni la velocitat de reproducció.
+* **Far 3D de Posseïdor Actiu Estil EA Sports FC:** Balisa dinàmica d'alta visibilitat ancorada al jugador en possessió, que inclou un anell pulsant sobre la gespa, un cilindre d'aura de focus zenital (`ConeGeometry`) i un diamant flotant. Els anells als peus dels jugadors sense pilota s'atenuen a una opacitat subtil de `0.22`, eliminant la saturació visual al camp. S'adapta dinàmicament tant a **🧠 La Nostra IA** (propietari probabilístic) com a **🤖 IA Comuna** (jugador més proper).
+* **Vincle Volumètric de Control (Cadena de Grans d'Energia):** Substitueix les línies de filferro 2D d'1px per una cadena de 16 esferes volumètriques 3D al llarg d'un arc parabòlic animat que connecta el pit del posseïdor legítim amb la trajectòria de la pilota.
+* **Estela de Cometa 3D Immune al Desplaçament (Scrub-Safe):** 18 esferes graduades que tracen l'estela de la pilota mitjançant mostreig temporal sub-frame fraccional, mantenint-se completament estable durant el rebobinament ràpid i escalant la seva longitud d'acord amb la velocitat de la pilota.
+* **Halo de Possessió Radiant a la Gespa:** Anell lluminós directament sota l'ombra de la pilota que pulsa amb el color de l'equip en possessió (degradat blaugrana per al FC Barcelona vs. cian per al rival).
+* **Pols Neuronal Violeta de Jev AI (System One):** Quan Jev resol un toc dividit al límit (`f0.jev === 1`), un giroscopi 3D violeta de doble anell contra-rotatori (`#A855F7`) s'activa amb una suau persistència visual de 0.45s perquè els judicis d'un sol fotograma siguin perfectament apreciables per l'espectador.
+* **Targeta HUD de Jugador Actiu Estil TV Broadcast:** Gràfic televisiu ancorat sota el marcador superior que mostra l'escut del club, dorsal gran i llegible (`#10`) i etiqueta d'estat de control en temps real (*CONTROL TOTAL*, *DISPUTADA*, etc.).
+* **Marcadors de Pèrdua/Recuperació a la Línia de Temps (Pips):** Marques interactives sobreposades sobre la barra de temps (pips daurats per a recuperacions/canvis de possessió i pips violetes per a intervencions de Jev AI) amb tooltips descriptius i navegació instantània en fer clic.
+* **Bucle de Renderització 100% Zero-GC a 60 FPS:** Motor d'animació d'alt rendiment lliure de recol·lecció d'escombraries mitjançant vectors i colors de treball preassignats (`_scratchV3`, `_scratchTarget`, `_scratchColorJev`, `_scratchP1Map`), eradicant micro-estrebades i caigudes de fotogrames.
+* **Alliberament Rigorós de Recursos GPU:** Neteja profunda amb crides explícites a `.dispose()` en geometries, materials i textures d'sprites de canvas en recarregar partits o canviar de conjunt de dades.
 * **API Global de Control IA (`window.PossessionViewerAPI`):** Preparada per a la integració amb Gemini Live i agents multimodals:
   - `getCurrentFrameState()`: Retorna el fotograma actiu, coordenades 3D de la pilota interpolades, equip en possessió i esdeveniments tàctics.
   - `captureCanvasBase64()`: Retorna `renderer.domElement.toDataURL('image/jpeg', 0.8)` (`preserveDrawingBuffer: true`).
   - `setCameraMode(mode)`, `setBrainMode(mode)`, `setSpeed(speed)`, `seekToSecond(sec)`, `togglePlay()`.
 * **Commutador de Comparació d'IA:** Alterna en temps real entre **🧠 La Nostra IA** (Viterbi + Jev) i la **🤖 IA Comuna** (heurística de jugador més proper).
 * **Escut 3D Anti-Robatori (Pass Shield):** Una esfera de filferro daurada que protegeix la pilota en passades filtrades d'alta velocitat quan creua a prop de rivals sense ser interceptada.
-* **Fil Daurat de Control:** Corba de Bézier 3D que uneix en tot moment el posseïdor legítim amb la pilota.
 * **4 Perspectives de Càmera:**
   - 🎥 **Càmera TV:** Seguiment suau de l'acció de retransmissió.
   - 🚁 **Dron Proper:** Enfocament cinemàtic de seguiment a baixa alçada.

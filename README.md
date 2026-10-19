@@ -319,24 +319,31 @@ Start-Process artifacts\visualizations\viewer.html
 .\.venv\Scripts\python.exe generate_3d_replay_html.py --standalone
 ```
 
-#### Architecture & Hot-Reload Features:
+#### Architecture, Visual Features & Zero-GC Engine:
 * **Decoupled Frontend & Zero-CORS Payload:** Visual code resides in `artifacts/visualizations/viewer.html`, strictly separated from `match_payload.js` (`window.MATCH_DATA = {...};`) and `match_payload.json`. Bypasses browser local CORS restrictions when opened directly via `file://`.
 * **Hot-Edit Protection Guard:** Re-running Python updates match payloads while preserving manual customizations in `viewer.html` unless `--reset-viewer` is passed explicitly.
 * **In-App Data Hot-Reload:** Click **🔄 Recargar Datos** on the bottom HUD to dynamically reload `match_payload.js` without losing camera view or playback speed.
+* **EA Sports FC-Style 3D Active Carrier Beacon:** High-visibility dynamic beacon anchored to the active ball carrier, featuring a turf pulsing ring, vertical spotlight aura cylinder (`ConeGeometry`), and floating diamond marker. Non-possessing player foot rings are muted to subtle `0.22` opacity, eliminating field visual clutter. Dynamically adapts in both **🧠 Nuestra IA** (probabilistic owner) and **🤖 IA Común** (closest player).
+* **Volumetric Control Tether (Energy Bead Chain):** Replaces flat 1px WebGL wire lines with a 16-node 3D volumetric sphere chain along an animated parabolic arc connecting the legitimate carrier's chest to the ball trajectory.
+* **Scrub-Safe 3D Ball Comet Motion Trail:** 18-sphere graduated motion trail trailing the ball, calculated via fractional sub-frame temporal sampling so the trail remains stable during rapid timeline scrubbing and scales dynamically with ball velocity.
+* **Dynamic Ground Possession Halo:** Radial glowing turf ring directly beneath the ball shadow that pulses with the controlling team's colors (Blaugrana gradient for FC Barcelona vs. Cyan for Opponent).
+* **Jev AI (System One) 3D Violet Neural Pulse:** Whenever Jev resolves a split-second disputed touch (`f0.jev === 1`), a counter-rotating dual-ring violet gyroscope (`#A855F7`) bursts into life with smooth 0.45s decay persistence so single-frame judgments are clearly visible to spectators.
+* **TV-Style Active Carrier HUD Card:** Top-anchored broadcast graphic showing team crest, bold jersey number (`#10`), and real-time possession state badge (*CONTROL TOTAL*, *DISPUTADA*, etc.).
+* **Interactive Timeline Turnover Markers (Pips):** Micro-markers overlaid along the timeline scrubber track (golden pips for true turnovers, violet pips for Jev AI activations) with hover tooltips and instant seek-on-click navigation.
+* **100% Zero-GC 60 FPS Render Loop:** High-performance animation loop utilizing pre-allocated module scratchpads (`_scratchV3`, `_scratchTarget`, `_scratchColorJev`, `_scratchP1Map`), eliminating garbage collection stutters and frame drops.
+* **Leak-Free GPU Resource Disposal:** Rigorous `.dispose()` cleanup of geometries, materials, and canvas sprite textures during match reloads or dataset switching.
 * **Realtime AI Controller API (`window.PossessionViewerAPI`):** Ready for Gemini Live / multimodal agent integration:
   - `getCurrentFrameState()`: Returns active frame, interpolated ball coordinates, active possession team, and tactical events.
   - `captureCanvasBase64()`: Returns `renderer.domElement.toDataURL('image/jpeg', 0.8)` (`preserveDrawingBuffer: true`).
   - `setCameraMode(mode)`, `setBrainMode(mode)`, `setSpeed(speed)`, `seekToSecond(sec)`, `togglePlay()`.
 * **Interactive AI Comparison Switch:** Real-time toggle between **🧠 Nuestra IA** (Viterbi + Jev) and **🤖 IA Común** (Nearest-Player heuristic).
 * **Escudo 3D Anti-Robo (Pass Shield):** An animated golden icosahedron wireframe protecting the ball during high-speed passes near rivals.
-* **Hilo Dorado de Control (3D Tether Arc):** A dynamic Bezier curve joining the legitimate ball controller to the ball trajectory.
 * **4 Camera Perspectives:**
   - 🎥 **TV Broadcast:** Smooth tracking following match action.
   - 🚁 **Dron Cercano:** Close-up cinematic follow camera.
   - 🏟️ **Pizarra Aérea:** Orthogonal 2D tactical board view.
   - 🕹️ **Vista Libre (Órbita Manual):** Full 360° mouse drag orbit and scroll-wheel zoom (12m to 140m).
 * **Keyboard Hotkeys:** `Space` (Play/Pause), `← / →` (-1s / +1s), `1-4` (Camera Modes), `M` (AI Mode Switch).
-
 
 ---
 
