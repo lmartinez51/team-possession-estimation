@@ -302,21 +302,33 @@ Inferencia puramente determinística basada en cinemática local y relajación t
 
 ### Repetición 3D Interactiva para Retransmisión (`generate_3d_replay_html.py`)
 
-Para demostraciones técnicas, experiencia del aficionado y análisis táctico, [`generate_3d_replay_html.py`](file:///generate_3d_replay_html.py) compila las predicciones en una **experiencia 3D interactiva en WebGL** construida con Three.js. Traduce conceptos matemáticos abstractos (puentes acotados, estados de Viterbi y contactos resueltos por Jev) a elementos visuales intuitivos.
+Para demostraciones técnicas, experiencia del aficionado y análisis táctico, [`generate_3d_replay_html.py`](file:///generate_3d_replay_html.py) compila las predicciones en una **experiencia 3D desacoplada en WebGL** construida con Three.js. Traduce conceptos matemáticos abstractos (puentes acotados, estados de Viterbi y contactos resueltos por Jev) a elementos visuales intuitivos.
 
 ```powershell
-# 1. Generar repetición 3D interactiva (por defecto: 60s a 25Hz):
-.\.venv\Scripts\python.exe generate_3d_replay_html.py --max-frames 1500 --output artifacts\visualizations\barca_3d_interactive_replay.html
+# 1. Exportar datos del partido y visor 3D desacoplado (por defecto: 60s a 25Hz):
+.\.venv\Scripts\python.exe generate_3d_replay_html.py --max-frames 1500
 
-# 2. Generar a partir de archivos o carpetas personalizadas:
-.\.venv\Scripts\python.exe generate_3d_replay_html.py --data-dir data --max-frames 2500
+# 2. Abrir el visor directamente en el navegador (compatible con Zero-CORS file://):
+Start-Process artifacts\visualizations\viewer.html
+
+# 3. Forzar el restablecimiento o sobrescritura de la plantilla visual:
+.\.venv\Scripts\python.exe generate_3d_replay_html.py --reset-viewer
+
+# 4. Compilar un archivo HTML autónomo e independiente para compartir:
+.\.venv\Scripts\python.exe generate_3d_replay_html.py --standalone
 ```
 
-#### Características Visuales y Tácticas Clave:
-* **Conmutador de Comparación de IA:** Alterna en tiempo real entre **🧠 Nuestra IA** (Viterbi + Jev) y la **🤖 IA Común** (heurística de jugador más cercano) para observar en vivo los errores de proximidad y falsos cambios de posesión evitados.
-* **Escudo 3D Anti-Robo (Pass Shield):** Una esfera alámbrica dorada (icosaedro) que protege el balón en pases filtrados de alta velocidad cuando cruza cerca de rivales sin ser interceptado.
+#### Arquitectura y Recarga en Caliente (Hot-Reload):
+* **Frontend Desacoplado y Zero-CORS:** El código visual reside en `artifacts/visualizations/viewer.html`, estrictamente separado de `match_payload.js` (`window.MATCH_DATA = {...};`) y `match_payload.json`. Evita las restricciones locales de CORS de los navegadores al abrir directamente con doble clic vía `file://`.
+* **Guardia Anti-Sobrescritura:** Ejecutar Python actualiza siempre los datos del partido preservando cualquier edición visual o de Three.js manual en `viewer.html` salvo que se especifique `--reset-viewer`.
+* **Recarga en Caliente en la App:** Pulsa **🔄 Recargar Datos** en la barra inferior para refrescar `match_payload.js` en vivo sin perder la vista de cámara ni la velocidad de reproducción.
+* **API Global de Control IA (`window.PossessionViewerAPI`):** Preparada para integración con Gemini Live y agentes multimodales:
+  - `getCurrentFrameState()`: Devuelve el cuadro activo, coordenadas 3D del balón interpoladas, equipo en posesión y eventos tácticos.
+  - `captureCanvasBase64()`: Devuelve `renderer.domElement.toDataURL('image/jpeg', 0.8)` (`preserveDrawingBuffer: true`).
+  - `setCameraMode(mode)`, `setBrainMode(mode)`, `setSpeed(speed)`, `seekToSecond(sec)`, `togglePlay()`.
+* **Conmutador de Comparación de IA:** Alterna en tiempo real entre **🧠 Nuestra IA** (Viterbi + Jev) y la **🤖 IA Común** (heurística de jugador más cercano).
+* **Escudo 3D Anti-Robo (Pass Shield):** Una esfera alámbrica dorada que protege el balón en pases filtrados de alta velocidad cuando cruza cerca de rivales sin ser interceptado.
 * **Hilo Dorado de Control:** Curva de Bézier 3D que une en todo momento al poseedor legítimo con la pelota.
-* **Ondas Expansivas Radiales:** Efectos de impacto en el césped que destacan toques firmes y robos defensivos.
 * **4 Perspectivas de Cámara:**
   - 🎥 **Cámara TV:** Seguimiento suave de la acción de retransmisión.
   - 🚁 **Dron Cercano:** Enfoque cinemático de seguimiento a baja altura.

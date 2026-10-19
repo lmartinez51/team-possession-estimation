@@ -303,21 +303,33 @@ The pipeline produces submission files with zero missing values, guaranteed mono
 
 ### Interactive 3D WebGL Broadcast Replay (`generate_3d_replay_html.py`)
 
-For technical demonstrations, fan experiences, and tactical debriefs, [`generate_3d_replay_html.py`](file:///generate_3d_replay_html.py) compiles tracking predictions into a self-contained **3D WebGL broadcast experience** powered by Three.js. It translates abstract mathematical concepts (bounded bridges, Viterbi states, and Jev contact resolutions) into intuitive visual cues.
+For technical demonstrations, fan experiences, and tactical debriefs, [`generate_3d_replay_html.py`](file:///generate_3d_replay_html.py) compiles tracking predictions into a decoupled **3D WebGL broadcast experience** powered by Three.js. It translates abstract mathematical concepts (bounded bridges, Viterbi states, and Jev contact resolutions) into intuitive visual cues.
 
 ```powershell
-# 1. Generate 3D interactive broadcast replay (default: 60s at 25Hz):
-.\.venv\Scripts\python.exe generate_3d_replay_html.py --max-frames 1500 --output artifacts\visualizations\barca_3d_interactive_replay.html
+# 1. Export decoupled match payload and visual viewer (default: 60s at 25Hz):
+.\.venv\Scripts\python.exe generate_3d_replay_html.py --max-frames 1500
 
-# 2. Generate from specific match files or custom data directory:
-.\.venv\Scripts\python.exe generate_3d_replay_html.py --data-dir data --max-frames 2500
+# 2. Open viewer directly in your browser (Zero-CORS file:// compatible):
+Start-Process artifacts\visualizations\viewer.html
+
+# 3. Force reset/overwrite the viewer template if modified:
+.\.venv\Scripts\python.exe generate_3d_replay_html.py --reset-viewer
+
+# 4. Generate a portable, self-contained single-file HTML bundle:
+.\.venv\Scripts\python.exe generate_3d_replay_html.py --standalone
 ```
 
-#### Key Visual & Tactical Features:
-* **Interactive AI Comparison Switch:** Toggle in real-time between **🧠 Nuestra IA** (Viterbi + Jev) and **🤖 IA Común** (Nearest-Player heuristic) to see naive proximity errors and false turnovers highlighted on the fly.
-* **Escudo 3D Anti-Robo (Pass Shield):** An animated golden icosahedron wireframe that envelops the ball during rapid through-balls or cross-field switches, visually demonstrating why passing near a defender does not forfeit team control.
+#### Architecture & Hot-Reload Features:
+* **Decoupled Frontend & Zero-CORS Payload:** Visual code resides in `artifacts/visualizations/viewer.html`, strictly separated from `match_payload.js` (`window.MATCH_DATA = {...};`) and `match_payload.json`. Bypasses browser local CORS restrictions when opened directly via `file://`.
+* **Hot-Edit Protection Guard:** Re-running Python updates match payloads while preserving manual customizations in `viewer.html` unless `--reset-viewer` is passed explicitly.
+* **In-App Data Hot-Reload:** Click **🔄 Recargar Datos** on the bottom HUD to dynamically reload `match_payload.js` without losing camera view or playback speed.
+* **Realtime AI Controller API (`window.PossessionViewerAPI`):** Ready for Gemini Live / multimodal agent integration:
+  - `getCurrentFrameState()`: Returns active frame, interpolated ball coordinates, active possession team, and tactical events.
+  - `captureCanvasBase64()`: Returns `renderer.domElement.toDataURL('image/jpeg', 0.8)` (`preserveDrawingBuffer: true`).
+  - `setCameraMode(mode)`, `setBrainMode(mode)`, `setSpeed(speed)`, `seekToSecond(sec)`, `togglePlay()`.
+* **Interactive AI Comparison Switch:** Real-time toggle between **🧠 Nuestra IA** (Viterbi + Jev) and **🤖 IA Común** (Nearest-Player heuristic).
+* **Escudo 3D Anti-Robo (Pass Shield):** An animated golden icosahedron wireframe protecting the ball during high-speed passes near rivals.
 * **Hilo Dorado de Control (3D Tether Arc):** A dynamic Bezier curve joining the legitimate ball controller to the ball trajectory.
-* **Expanding Shockwave Rings:** Radial ground waves marking physical contact anchors and defensive turnovers.
 * **4 Camera Perspectives:**
   - 🎥 **TV Broadcast:** Smooth tracking following match action.
   - 🚁 **Dron Cercano:** Close-up cinematic follow camera.

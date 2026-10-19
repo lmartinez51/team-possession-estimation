@@ -302,21 +302,33 @@ Inferència purament determinista basada en cinemàtica local i relaxació tempo
 
 ### Repetició 3D Interactiva per a Retransmissió (`generate_3d_replay_html.py`)
 
-Per a demostracions tècniques, experiència de l'aficionat i anàlisi tàctica, [`generate_3d_replay_html.py`](file:///generate_3d_replay_html.py) compila les prediccions en una **experiència 3D interactiva en WebGL** construïda amb Three.js. Tradueix conceptes matemàtics abstractes (ponts acotats, estats de Viterbi i contactes resolts per Jev) a elements visuals intuïtius.
+Per a demostracions tècniques, experiència de l'aficionat i anàlisi tàctica, [`generate_3d_replay_html.py`](file:///generate_3d_replay_html.py) compila les prediccions en una **experiència 3D desacoblada en WebGL** construïda amb Three.js. Tradueix conceptes matemàtics abstractes (ponts acotats, estats de Viterbi i contactes resolts per Jev) a elements visuals intuïtius.
 
 ```powershell
-# 1. Generar repetició 3D interactiva (per defecte: 60s a 25Hz):
-.\.venv\Scripts\python.exe generate_3d_replay_html.py --max-frames 1500 --output artifacts\visualizations\barca_3d_interactive_replay.html
+# 1. Exportar dades del partit i visualitzador 3D desacoblat (per defecte: 60s a 25Hz):
+.\.venv\Scripts\python.exe generate_3d_replay_html.py --max-frames 1500
 
-# 2. Generar a partir de fitxers o carpetes personalitzades:
-.\.venv\Scripts\python.exe generate_3d_replay_html.py --data-dir data --max-frames 2500
+# 2. Obrir el visualitzador directament al navegador (compatible amb Zero-CORS file://):
+Start-Process artifacts\visualizations\viewer.html
+
+# 3. Forçar el restabliment o sobreescriptura de la plantilla visual:
+.\.venv\Scripts\python.exe generate_3d_replay_html.py --reset-viewer
+
+# 4. Compilar un fitxer HTML autònom i independent per compartir:
+.\.venv\Scripts\python.exe generate_3d_replay_html.py --standalone
 ```
 
-#### Característiques Visuals i Tàctiques Clau:
-* **Commutador de Comparació d'IA:** Alterna en temps real entre **🧠 La Nostra IA** (Viterbi + Jev) i la **🤖 IA Comuna** (heurística de jugador més proper) per observar en directe els errors de proximitat i falsos canvis de possessió evitats.
-* **Escut 3D Anti-Robatori (Pass Shield):** Una esfera de filferro daurada (icosaedre) que protegeix la pilota en passades filtrades d'alta velocitat quan creua a prop de rivals sense ser interceptada.
+#### Arquitectura i Recàrrega en Calent (Hot-Reload):
+* **Frontend Desacoblat i Zero-CORS:** El codi visual resideix a `artifacts/visualizations/viewer.html`, estrictament separat de `match_payload.js` (`window.MATCH_DATA = {...};`) i `match_payload.json`. Evita les restriccions locals de CORS dels navegadors en obrir directament amb doble clic via `file://`.
+* **Guàrdia Anti-Sobreescriptura:** Executar Python actualitza sempre les dades del partit preservant qualsevol edició visual o de Three.js manual a `viewer.html` tret que s'especifiqui `--reset-viewer`.
+* **Recàrrega en Calent a l'App:** Prem **🔄 Recargar Datos** a la barra inferior per refrescar `match_payload.js` en viu sense perdre la vista de càmera ni la velocitat de reproducció.
+* **API Global de Control IA (`window.PossessionViewerAPI`):** Preparada per a la integració amb Gemini Live i agents multimodals:
+  - `getCurrentFrameState()`: Retorna el fotograma actiu, coordenades 3D de la pilota interpolades, equip en possessió i esdeveniments tàctics.
+  - `captureCanvasBase64()`: Retorna `renderer.domElement.toDataURL('image/jpeg', 0.8)` (`preserveDrawingBuffer: true`).
+  - `setCameraMode(mode)`, `setBrainMode(mode)`, `setSpeed(speed)`, `seekToSecond(sec)`, `togglePlay()`.
+* **Commutador de Comparació d'IA:** Alterna en temps real entre **🧠 La Nostra IA** (Viterbi + Jev) i la **🤖 IA Comuna** (heurística de jugador més proper).
+* **Escut 3D Anti-Robatori (Pass Shield):** Una esfera de filferro daurada que protegeix la pilota en passades filtrades d'alta velocitat quan creua a prop de rivals sense ser interceptada.
 * **Fil Daurat de Control:** Corba de Bézier 3D que uneix en tot moment el posseïdor legítim amb la pilota.
-* **Onades Expansives Radials:** Efectes d'impacte sobre la gespa que destaquen tocs ferms i recuperacions defensives.
 * **4 Perspectives de Càmera:**
   - 🎥 **Càmera TV:** Seguiment suau de l'acció de retransmissió.
   - 🚁 **Dron Proper:** Enfocament cinemàtic de seguiment a baixa alçada.
