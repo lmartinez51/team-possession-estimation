@@ -1,5 +1,7 @@
 # Frame-Level Team Possession Estimation
 
+🌐 **Language / Idioma / Llengua:** [English](README.md) | [Español](README.es.md) | [Català](README.ca.md)
+
 > **Architecture RFC v2.0:** Quality-Aware Kinematic GBDT + Jev System One Contact Anchors + Soft Viterbi Sequence Decoder  
 > **Event Target:** *More than a Hack 2027* (FC Barcelona & Metrica Sports)  
 > **Author:** Lorenzo Martinez  
@@ -343,7 +345,9 @@ For technical demonstrations, fan experiences, and tactical debriefs, [`generate
 ├── task5_evaluation_and_ablation.py       # Metrics, turnover matching & ablation runner
 ├── task6_match_visualizer.py              # 2D pitch & multi-panel diagnostic dashboard
 ├── .gitignore                             # Ignored caches, datasets and virtual environments
-└── README.md                              # Project documentation & benchmark overview
+├── README.md                              # Main documentation in American English (Default)
+├── README.es.md                           # Complete documentation in Spanish
+└── README.ca.md                           # Complete documentation in Catalan
 ```
 
 ---
