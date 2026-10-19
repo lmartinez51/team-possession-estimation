@@ -103,6 +103,7 @@ class FeatureCacheManager:
                     isinstance(cached_obj, dict)
                     and cached_obj.get("schema_version") == SCHEMA_VERSION
                     and cached_obj.get("config_hash") == cfg_hash
+                    and len(cached_obj.get("feature_df", [])) == len(dataset.frame_df)
                 ):
                     return cached_obj["feature_df"]
             except Exception:

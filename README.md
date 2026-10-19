@@ -299,6 +299,30 @@ The pipeline produces submission files with zero missing values, guaranteed mono
 | `--visualize` | `False` | Renders and saves high-resolution 3-panel tactical dashboard PNGs. |
 | `--model-bundle` | `artifacts/barca_possession_mvp_v2.pkl` | Path to the trained LightGBM model bundle. |
 
+### Interactive 3D WebGL Broadcast Replay (`generate_3d_replay_html.py`)
+
+For technical demonstrations, fan experiences, and tactical debriefs, [`generate_3d_replay_html.py`](file:///generate_3d_replay_html.py) compiles tracking predictions into a self-contained **3D WebGL broadcast experience** powered by Three.js. It translates abstract mathematical concepts (bounded bridges, Viterbi states, and Jev contact resolutions) into intuitive visual cues.
+
+```powershell
+# 1. Generate 3D interactive broadcast replay (default: 60s at 25Hz):
+.\.venv\Scripts\python.exe generate_3d_replay_html.py --max-frames 1500 --output artifacts\visualizations\barca_3d_interactive_replay.html
+
+# 2. Generate from specific match files or custom data directory:
+.\.venv\Scripts\python.exe generate_3d_replay_html.py --data-dir data --max-frames 2500
+```
+
+#### Key Visual & Tactical Features:
+* **Interactive AI Comparison Switch:** Toggle in real-time between **🧠 Nuestra IA** (Viterbi + Jev) and **🤖 IA Común** (Nearest-Player heuristic) to see naive proximity errors and false turnovers highlighted on the fly.
+* **Escudo 3D Anti-Robo (Pass Shield):** An animated golden icosahedron wireframe that envelops the ball during rapid through-balls or cross-field switches, visually demonstrating why passing near a defender does not forfeit team control.
+* **Hilo Dorado de Control (3D Tether Arc):** A dynamic Bezier curve joining the legitimate ball controller to the ball trajectory.
+* **Expanding Shockwave Rings:** Radial ground waves marking physical contact anchors and defensive turnovers.
+* **4 Camera Perspectives:**
+  - 🎥 **TV Broadcast:** Smooth tracking following match action.
+  - 🚁 **Dron Cercano:** Close-up cinematic follow camera.
+  - 🏟️ **Pizarra Aérea:** Orthogonal 2D tactical board view.
+  - 🕹️ **Vista Libre (Órbita Manual):** Full 360° mouse drag orbit and scroll-wheel zoom (12m to 140m).
+* **Keyboard Hotkeys:** `Space` (Play/Pause), `← / →` (-1s / +1s), `1-4` (Camera Modes), `M` (AI Mode Switch).
+
 
 ---
 
@@ -309,6 +333,7 @@ The pipeline produces submission files with zero missing values, guaranteed mono
 ├── docs/
 │   └── technical_submission_report.md     # Detailed RFC v2.0 technical report
 ├── auto_process_competition.py            # Automated batch scanning & inference for competition data
+├── generate_3d_replay_html.py             # 3D interactive WebGL/Three.js broadcast replay generator
 ├── ingest_and_test_metrica_sample.py      # Official Metrica Sample Game 1 ingestion & test suite
 ├── run_submission_pipeline.py             # Unified CLI submission & prediction pipeline
 ├── task1_schema_and_preprocessing.py      # Quality-aware segmented preprocessing
