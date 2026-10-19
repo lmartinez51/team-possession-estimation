@@ -536,6 +536,27 @@ BASELINE_VIEWER_HTML = r"""<!DOCTYPE html>
       }
     }
 
+    /* CLEAN PITCH VIEW (CINEMA MODE) */
+    .legend-card, #carrier-hud-card {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    body.clean-hud-mode .legend-card {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateX(-24px);
+    }
+    body.clean-hud-mode #carrier-hud-card {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateX(24px);
+    }
+    #btn-clean-hud.active {
+      background: var(--barca-gold);
+      color: #000;
+      border-color: var(--barca-gold);
+      box-shadow: 0 0 10px rgba(237, 187, 0, 0.5);
+    }
+
     /* BOTTOM PLAYBACK & CAMERA DOCK */
     .hud-bottom {
       position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
@@ -567,12 +588,73 @@ BASELINE_VIEWER_HTML = r"""<!DOCTYPE html>
       box-shadow: 0 0 10px rgba(237,187,0,0.6);
     }
     #timeline-slider { flex: 1; min-width: 180px; accent-color: var(--barca-gold); cursor: pointer; }
-    .turnover-chips { display: flex; gap: 6px; margin-top: 8px; align-items: center; flex-wrap: wrap; font-size: 11px; color: #CBD5E1; }
+
+    /* KEY MOMENTS TOOLBAR & DRAWER */
+    .moments-toolbar {
+      margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.12);
+      display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .moments-left-group, .moments-right-group, .moments-center-filters {
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .moments-title {
+      font-size: 11px; font-weight: 800; color: var(--barca-gold); text-transform: uppercase;
+      letter-spacing: 0.5px; white-space: nowrap; display: flex; align-items: center; gap: 4px;
+    }
+    .ctrl-btn.btn-xs {
+      padding: 3px 8px; font-size: 10px; border-radius: 6px; line-height: 1.2;
+    }
+    .filter-pill {
+      background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #94A3B8; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .filter-pill:hover {
+      background: rgba(237, 187, 0, 0.2); color: #FFF; border-color: rgba(237,187,0,0.5);
+    }
+    .filter-pill.active {
+      background: var(--barca-gold); color: #000; border-color: var(--barca-gold);
+      box-shadow: 0 0 8px rgba(237, 187, 0, 0.45); font-weight: 800;
+    }
+
+    .turnover-chips {
+      gap: 6px; margin-top: 6px; align-items: center; font-size: 11px; color: #CBD5E1;
+      transition: max-height 0.25s ease-out;
+    }
+    /* Mode 1: Compact Horizontal Carousel (Default) */
+    .turnover-chips.compact-carousel {
+      display: flex; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+      max-height: 34px; scrollbar-width: thin; padding-bottom: 2px;
+    }
+    /* Mode 2: Multi-Row Drawer with strict 92px height ceiling */
+    .turnover-chips.expanded-drawer {
+      display: flex; flex-wrap: wrap; max-height: 92px; overflow-y: auto; overflow-x: hidden;
+      scrollbar-width: thin; padding-bottom: 2px;
+    }
+    /* Mode 3: Collapsed Hidden */
+    .turnover-chips.collapsed-hidden {
+      display: none !important;
+    }
+
+    .turnover-chips::-webkit-scrollbar { height: 4px; width: 4px; }
+    .turnover-chips::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); border-radius: 4px; }
+    .turnover-chips::-webkit-scrollbar-thumb { background: rgba(237, 187, 0, 0.5); border-radius: 4px; }
+    .turnover-chips::-webkit-scrollbar-thumb:hover { background: var(--barca-gold); }
+
     .chip-btn {
       background: rgba(165,0,68,0.55); border: 1px solid var(--barca-gold); color: #FFF;
       padding: 3px 9px; border-radius: 99px; font-size: 11px; cursor: pointer; font-weight: 700;
+      white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
     }
     .chip-btn:hover { background: var(--barca-gold); color: #000; }
+    .chip-btn.active-moment {
+      background: #EDBB00 !important; color: #000 !important; font-weight: 900;
+      box-shadow: 0 0 10px rgba(237, 187, 0, 0.9); border-color: #FFF;
+    }
+    .chip-btn.chip-jev.active-moment {
+      background: #C084FC !important; color: #000 !important;
+      box-shadow: 0 0 12px rgba(168, 85, 247, 1.0); border-color: #FFF;
+    }
 
     /* DATA MISSING OVERLAY */
     #data-missing-overlay {
@@ -706,11 +788,28 @@ BASELINE_VIEWER_HTML = r"""<!DOCTYPE html>
       <button id="cam-top" class="ctrl-btn" onclick="setCameraMode('TOP')">🏟️ Aérea</button>
       <button id="cam-free" class="ctrl-btn" onclick="setCameraMode('FREE')">🕹️ Libre</button>
     </div>
+    <button id="btn-clean-hud" class="ctrl-btn" onclick="toggleCleanHud()" title="Ocultar/Mostrar paneles laterales (Tecla H)">👁️ Vista</button>
     <button id="btn-reload" class="ctrl-btn ctrl-btn-reload" onclick="reloadDataPayload()">🔄 Recargar Datos</button>
   </div>
-  <div id="turnover-chips-row" class="turnover-chips">
-    <span>⚡ Saltar a momentos clave:</span>
+  <!-- COMPACT & FILTERABLE KEY MOMENTS TOOLBAR & DRAWER -->
+  <div class="moments-toolbar">
+    <div class="moments-left-group">
+      <span class="moments-title">⚡ Momentos Clave (<span id="moments-count">0</span>)</span>
+      <div class="btn-group">
+        <button class="ctrl-btn btn-xs" onclick="jumpToAdjacentEvent(-1)" title="Momento anterior">⏮️ Ant.</button>
+        <button class="ctrl-btn btn-xs" onclick="jumpToAdjacentEvent(1)" title="Momento siguiente">⏭️ Sig.</button>
+      </div>
+    </div>
+    <div class="moments-center-filters">
+      <button id="filter-moments-all" class="filter-pill active" onclick="setEventFilter('ALL')">Todos</button>
+      <button id="filter-moments-turnover" class="filter-pill" onclick="setEventFilter('TURNOVER')">⚡ Robos</button>
+      <button id="filter-moments-jev" class="filter-pill" onclick="setEventFilter('JEV')">🧠 Jev AI</button>
+    </div>
+    <div class="moments-right-group">
+      <button id="btn-toggle-moments" class="ctrl-btn btn-xs" onclick="cycleMomentsViewMode()">🔼 Expandir Lista</button>
+    </div>
   </div>
+  <div id="turnover-chips-row" class="turnover-chips compact-carousel"></div>
 </div>
 
 <!-- THREE.JS CDN -->
@@ -726,8 +825,57 @@ let currentFrameFloat = 0.0;
 let totalFrames = 0;
 let fps = 25.0;
 let playerMeshes = {};
+let prevBallX = null, prevBallZ = null;
+let lastEventCode = 'NONE';
+let toastTimeoutId = null;
+let isCleanHud = false;
+
+// Key Moments Navigation, Filtering & View State
+let timelineEvents = [];
+let currentEventFilter = 'ALL'; // 'ALL' | 'TURNOVER' | 'JEV'
+let momentsViewMode = 'COMPACT'; // 'COMPACT' | 'EXPANDED' | 'COLLAPSED'
+let currentRenderedChips = [];
 
 const slider = document.getElementById('timeline-slider');
+
+// --- DOM ELEMENT CACHE FOR 60FPS ZERO-LOOKUP RENDER LOOP ---
+const domCache = {
+  lblProbHome: document.getElementById('lbl-prob-home'),
+  lblProbAway: document.getElementById('lbl-prob-away'),
+  tugFillHome: document.getElementById('tug-fill-home'),
+  lblClock: document.getElementById('lbl-clock'),
+  statOurSw: document.getElementById('stat-our-sw'),
+  statNaiveSw: document.getElementById('stat-naive-sw'),
+  statSaved: document.getElementById('stat-saved'),
+  ballSpeedBadge: document.getElementById('ball-speed-badge'),
+  flickerAlert: document.getElementById('flicker-alert'),
+  commentaryText: document.getElementById('commentary-text'),
+  carrierCard: document.getElementById('carrier-hud-card'),
+  carrierCrest: document.getElementById('carrier-crest'),
+  carrierPlayerTitle: document.getElementById('carrier-player-title'),
+  carrierTeamName: document.getElementById('carrier-team-name'),
+  carrierJerseyBox: document.getElementById('carrier-jersey-box'),
+  carrierAccentBar: document.getElementById('carrier-accent-bar'),
+  carrierStatusBadge: document.getElementById('carrier-status-badge'),
+  carrierBrainTag: document.getElementById('carrier-brain-tag'),
+  chipsRow: document.getElementById('turnover-chips-row'),
+  momentsCount: document.getElementById('moments-count'),
+  btnCleanHud: document.getElementById('btn-clean-hud')
+};
+
+// --- STATE DIRTY-CHECKING TRACKER ---
+const lastHudState = {
+  probHomePct: -1,
+  frameId: -1,
+  ourSw: -1,
+  naiSw: -1,
+  statSaved: -1,
+  speedBadgeStr: '',
+  commentaryStr: '',
+  flickerVisible: null,
+  carrierSignature: '',
+  activeMomentIndex: -1
+};
 
 // --- THREE.JS SCENE SETUP ---
 const container = document.getElementById('canvas-container');
@@ -866,18 +1014,117 @@ function makeNumberSprite(numStr, teamCode, isGK) {
   const tex = new THREE.CanvasTexture(c);
   const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
   spr.scale.set(1.8, 1.8, 1);
-  spr.position.set(0, 2.85, 0);
+  spr.position.set(0, 3.05, 0);
   return spr;
+}
+
+// --- PROCEDURAL HIGH-CONTRAST 3D SOCCER BALL TEXTURE (512x256) ---
+function createSoccerBallTexture() {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 256;
+  const ctx = c.getContext('2d');
+
+  // Pearl-white leather base
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, 512, 256);
+
+  function drawPanel(cx, cy, radius, sides, rot, fillColor, strokeColor, lineWidth) {
+    ctx.beginPath();
+    for (let i = 0; i < sides; i++) {
+      const angle = (i * 2 * Math.PI) / sides + rot;
+      const x = cx + radius * Math.cos(angle);
+      const y = cy + radius * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+  }
+
+  const panels = [
+    // Top Row (y = 58)
+    { x: 42, y: 58, r: 24, s: 5, rot: 0, fill: '#002B5C' },
+    { x: 128, y: 58, r: 25, s: 6, rot: Math.PI / 6, fill: '#A50044' },
+    { x: 214, y: 58, r: 24, s: 5, rot: 0, fill: '#002B5C' },
+    { x: 300, y: 58, r: 25, s: 6, rot: Math.PI / 6, fill: '#A50044' },
+    { x: 386, y: 58, r: 24, s: 5, rot: 0, fill: '#002B5C' },
+    { x: 472, y: 58, r: 25, s: 6, rot: Math.PI / 6, fill: '#A50044' },
+
+    // Middle Row - Equator (y = 128)
+    { x: 0, y: 128, r: 25, s: 6, rot: Math.PI / 6, fill: '#A50044' },
+    { x: 85, y: 128, r: 24, s: 5, rot: 0, fill: '#002B5C' },
+    { x: 171, y: 128, r: 25, s: 6, rot: Math.PI / 6, fill: '#A50044' },
+    { x: 256, y: 128, r: 24, s: 5, rot: 0, fill: '#002B5C' },
+    { x: 341, y: 128, r: 25, s: 6, rot: Math.PI / 6, fill: '#A50044' },
+    { x: 426, y: 128, r: 24, s: 5, rot: 0, fill: '#002B5C' },
+    { x: 512, y: 128, r: 25, s: 6, rot: Math.PI / 6, fill: '#A50044' },
+
+    // Bottom Row (y = 198)
+    { x: 42, y: 198, r: 24, s: 5, rot: 0, fill: '#002B5C' },
+    { x: 128, y: 198, r: 25, s: 6, rot: Math.PI / 6, fill: '#A50044' },
+    { x: 214, y: 198, r: 24, s: 5, rot: 0, fill: '#002B5C' },
+    { x: 300, y: 198, r: 25, s: 6, rot: Math.PI / 6, fill: '#A50044' },
+    { x: 386, y: 198, r: 24, s: 5, rot: 0, fill: '#002B5C' },
+    { x: 472, y: 198, r: 25, s: 6, rot: Math.PI / 6, fill: '#A50044' }
+  ];
+
+  ctx.strokeStyle = '#EDBB00';
+  ctx.lineWidth = 2.0;
+  ctx.beginPath();
+  for (let i = 0; i < panels.length; i++) {
+    for (let j = i + 1; j < panels.length; j++) {
+      const dx = Math.abs(panels[i].x - panels[j].x);
+      const dy = Math.abs(panels[i].y - panels[j].y);
+      if (dx < 100 && dy < 85) {
+        ctx.moveTo(panels[i].x, panels[i].y);
+        ctx.lineTo(panels[j].x, panels[j].y);
+      }
+    }
+  }
+  ctx.stroke();
+
+  panels.forEach(p => {
+    drawPanel(p.x, p.y, p.r, p.s, p.rot, p.fill, '#EDBB00', 3.5);
+  });
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  return tex;
 }
 
 // --- 3D BALL, PASS SHIELD, SHADOW, TRAIL & CONTROL TETHER ---
 const ballGroup = new THREE.Group();
+const ballTexture = createSoccerBallTexture();
 const ballMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(0.38, 24, 24),
-  new THREE.MeshStandardMaterial({ color: 0xFFFFFF, emissive: 0xEDBB00, emissiveIntensity: 0.35, roughness: 0.2 })
+  new THREE.SphereGeometry(0.46, 28, 28),
+  new THREE.MeshStandardMaterial({
+    map: ballTexture,
+    roughness: 0.22,
+    metalness: 0.1,
+    emissive: 0xEDBB00,
+    emissiveIntensity: 0.18
+  })
 );
 ballMesh.castShadow = true;
 ballGroup.add(ballMesh);
+
+// 3D Relief Exoskeleton Cage (rotates together with ballMesh)
+const ballReliefCage = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(0.475, 1),
+  new THREE.MeshStandardMaterial({
+    color: 0x1E293B,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.55,
+    roughness: 0.3
+  })
+);
+ballMesh.add(ballReliefCage);
 
 // Anti-theft Pass Shield ('Escudo de Pase Filtrado')
 const shieldMesh = new THREE.Mesh(
@@ -1032,6 +1279,55 @@ shockRing.rotation.x = -Math.PI / 2; shockRing.position.y = 0.06;
 scene.add(shockRing);
 let shockScale = 1.0, shockAlpha = 0.0;
 
+// Procedural Kit Texture Generator for Minecraft/Roblox Blocky Torsos (Cached at Module Level)
+function createKitTexture(teamCode, isGK) {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const ctx = c.getContext('2d');
+
+  if (isGK) {
+    // High-visibility gold/amber keeper kit (#EAB308)
+    ctx.fillStyle = '#EAB308';
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = '#CA8A04';
+    ctx.fillRect(0, 0, 256, 32);
+    ctx.fillRect(0, 224, 256, 32);
+    ctx.strokeStyle = '#FEF08A';
+    ctx.lineWidth = 5;
+    ctx.strokeRect(12, 12, 232, 232);
+  } else if (teamCode === 'H') {
+    // Classic FC Barcelona vertical Blaugrana stripes (#004D98 and #A50044)
+    ctx.fillStyle = '#004D98';
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = '#A50044';
+    const numStripes = 6;
+    const stripeW = 256 / numStripes;
+    for (let i = 1; i < numStripes; i += 2) {
+      ctx.fillRect(i * stripeW, 0, stripeW, 256);
+    }
+    // Gold collar & waistband accents (#EDBB00)
+    ctx.fillStyle = '#EDBB00';
+    ctx.fillRect(0, 0, 256, 24);
+    ctx.fillRect(0, 232, 256, 24);
+  } else {
+    // Crisp white/slate jersey (#F8FAFC) with electric cyan (#00E5FF) trim
+    ctx.fillStyle = '#F8FAFC';
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = '#00E5FF';
+    ctx.fillRect(0, 0, 256, 28);
+    ctx.fillRect(0, 0, 24, 256);
+    ctx.fillRect(232, 0, 24, 256);
+    ctx.fillStyle = '#0F172A';
+    ctx.fillRect(0, 232, 256, 24);
+  }
+  return new THREE.CanvasTexture(c);
+}
+
+// Module-level persistent cached textures (prevent recreating / double-disposing on hot-reload)
+const sharedKitTexHome = createKitTexture('H', false);
+const sharedKitTexAway = createKitTexture('A', false);
+const sharedKitTexGK = createKitTexture('H', true);
+
 // --- DYNAMIC DATA INITIALIZATION / HOT-RELOAD ---
 function initMatchData(data) {
   const overlay = document.getElementById('data-missing-overlay');
@@ -1041,6 +1337,21 @@ function initMatchData(data) {
     return;
   }
   if (overlay) overlay.style.display = 'none';
+
+  // Reset ball rolling & HUD dirty-checking state on every payload initialization
+  prevBallX = null;
+  prevBallZ = null;
+  lastEventCode = 'NONE';
+  lastHudState.probHomePct = -1;
+  lastHudState.frameId = -1;
+  lastHudState.ourSw = -1;
+  lastHudState.naiSw = -1;
+  lastHudState.statSaved = -1;
+  lastHudState.speedBadgeStr = '';
+  lastHudState.commentaryStr = '';
+  lastHudState.flickerVisible = null;
+  lastHudState.carrierSignature = '';
+  lastHudState.activeMomentIndex = -1;
 
   window.MATCH_DATA = data;
   totalFrames = data.frames.length;
@@ -1057,47 +1368,53 @@ function initMatchData(data) {
     }
   }
 
-  // Populate Visual Timeline Turnover Markers on Slider Track & Key Event Chips
+  // Populate Visual Timeline Markers on Slider Track with Coalescing & Cooldown
   const pipsContainer = document.getElementById('timeline-pips-track');
-  const chipsRow = document.getElementById('turnover-chips-row');
   if (pipsContainer) pipsContainer.innerHTML = '';
-  if (chipsRow) chipsRow.innerHTML = '<span>⚡ Saltar a momentos clave:</span>';
 
-  const timelineEvents = [];
-  const seenFrames = new Set();
+  timelineEvents = [];
+  const turnoverCooldown = Math.round(fps * 1.0); // 1.0s cooldown to deduplicate redundant turnovers
+  const jevCooldown = Math.round(fps * 2.0);      // 2.0s cooldown between consecutive JEV duel activations
 
   if (data.turnovers && data.turnovers.length > 0) {
     data.turnovers.forEach((to) => {
-      timelineEvents.push({
-        frame_idx: to.frame_idx,
-        type: 'TURNOVER',
-        team: to.team,
-        label: to.label || `${(to.timestamp_s || to.frame_idx / fps).toFixed(1)}s — Robo de Balón (${to.team === 'H' ? 'Barça' : 'Rival'})`
-      });
-      seenFrames.add(to.frame_idx);
+      const fIdx = to.frame_idx;
+      const isClose = timelineEvents.some(e => e.type === 'TURNOVER' && Math.abs(e.frame_idx - fIdx) < turnoverCooldown);
+      if (!isClose) {
+        timelineEvents.push({
+          frame_idx: fIdx,
+          type: 'TURNOVER',
+          team: to.team,
+          label: to.label || `${(to.timestamp_s || fIdx / fps).toFixed(1)}s — ⚡ Robo (${to.team === 'H' ? 'Barça' : 'Rival'})`
+        });
+      }
     });
   }
 
-  // Scan frames for key transitions and Jev AI activations
+  // Scan frames for key transitions and Jev AI activations with debouncing
   if (data.frames) {
     let prevJev = 0;
     data.frames.forEach((f, idx) => {
-      if (f.ev && f.ev.startsWith('TURNOVER') && !seenFrames.has(idx)) {
-        timelineEvents.push({
-          frame_idx: idx,
-          type: 'TURNOVER',
-          team: f.ot,
-          label: `${f.t.toFixed(1)}s — ⚡ Recuperación (${f.ot === 'H' ? 'Barça' : 'Rival'})`
-        });
-        seenFrames.add(idx);
-      } else if (f.jev === 1 && prevJev === 0 && !seenFrames.has(idx)) {
-        timelineEvents.push({
-          frame_idx: idx,
-          type: 'JEV',
-          team: f.ot,
-          label: `${f.t.toFixed(1)}s — 🧠 Jev AI: Jugada Dividida`
-        });
-        seenFrames.add(idx);
+      if (f.ev && f.ev.startsWith('TURNOVER')) {
+        const isClose = timelineEvents.some(e => e.type === 'TURNOVER' && Math.abs(e.frame_idx - idx) < turnoverCooldown);
+        if (!isClose) {
+          timelineEvents.push({
+            frame_idx: idx,
+            type: 'TURNOVER',
+            team: f.ot,
+            label: `${f.t.toFixed(1)}s — ⚡ Robo (${f.ot === 'H' ? 'Barça' : 'Rival'})`
+          });
+        }
+      } else if (f.jev === 1 && prevJev === 0) {
+        const isClose = timelineEvents.some(e => e.type === 'JEV' && Math.abs(e.frame_idx - idx) < jevCooldown);
+        if (!isClose) {
+          timelineEvents.push({
+            frame_idx: idx,
+            type: 'JEV',
+            team: f.ot,
+            label: `${f.t.toFixed(1)}s — 🧠 Jev AI: Jugada Dividida`
+          });
+        }
       }
       prevJev = f.jev;
     });
@@ -1105,18 +1422,21 @@ function initMatchData(data) {
 
   timelineEvents.sort((a, b) => a.frame_idx - b.frame_idx);
 
-  // Overlay pips on slider track
+  // Overlay pips on slider track with data attributes for filtering
   if (pipsContainer && totalFrames > 1) {
     timelineEvents.forEach((evt) => {
       const pct = (evt.frame_idx / (totalFrames - 1)) * 100.0;
       const pip = document.createElement('div');
       pip.className = `timeline-pip ${evt.type === 'JEV' ? 'pip-jev' : (evt.team === 'H' ? 'pip-home' : 'pip-away')}`;
+      pip.dataset.type = evt.type;
+      pip.dataset.team = evt.team;
       pip.style.left = `${pct}%`;
       pip.title = evt.label;
       pip.onclick = (e) => {
         e.stopPropagation();
-        currentFrameFloat = evt.frame_idx;
+        currentFrameFloat = Math.max(0, evt.frame_idx - (evt.type === 'JEV' ? 8 : 18));
         if (slider) slider.value = currentFrameFloat;
+        prevBallX = null; prevBallZ = null;
         triggerEventToast(
           evt.label,
           evt.type === 'JEV' ? 'linear-gradient(90deg,#9333EA,#A855F7)' : (evt.team === 'H' ? 'linear-gradient(90deg,#004D98,#A50044)' : '#0284C7')
@@ -1126,30 +1446,8 @@ function initMatchData(data) {
     });
   }
 
-  // Populate interactive chips
-  if (chipsRow) {
-    if (timelineEvents.length > 0) {
-      timelineEvents.forEach((evt) => {
-        const btn = document.createElement('button');
-        btn.className = `chip-btn ${evt.type === 'JEV' ? 'chip-jev' : ''}`;
-        btn.innerText = evt.label;
-        btn.onclick = () => {
-          currentFrameFloat = Math.max(0, evt.frame_idx - (evt.type === 'JEV' ? 8 : 18));
-          if (slider) slider.value = currentFrameFloat;
-        };
-        chipsRow.appendChild(btn);
-      });
-    } else {
-      const btn = document.createElement('button');
-      btn.className = 'chip-btn';
-      btn.innerText = 'Inicio del Partido (0.0s)';
-      btn.onclick = () => {
-        currentFrameFloat = 0;
-        if (slider) slider.value = 0;
-      };
-      chipsRow.appendChild(btn);
-    }
-  }
+  // Populate interactive chips drawer/carousel
+  renderMomentChips();
 
   // Clear existing players and build new roster meshes with thorough GPU resource disposal
   for (const idx in playerMeshes) {
@@ -1161,14 +1459,17 @@ function initMatchData(data) {
             child.geometry.dispose();
           }
           if (child.material) {
+            const disposeMat = (mat) => {
+              // Dispose dynamic number sprite textures, but protect shared kit textures
+              if (mat.map && mat.map !== sharedKitTexHome && mat.map !== sharedKitTexAway && mat.map !== sharedKitTexGK) {
+                mat.map.dispose();
+              }
+              mat.dispose();
+            };
             if (Array.isArray(child.material)) {
-              child.material.forEach((mat) => {
-                if (mat.map) mat.map.dispose();
-                mat.dispose();
-              });
+              child.material.forEach(disposeMat);
             } else {
-              if (child.material.map) child.material.map.dispose();
-              child.material.dispose();
+              disposeMat(child.material);
             }
           }
         }
@@ -1183,29 +1484,82 @@ function initMatchData(data) {
       const grp = new THREE.Group();
       const isHome = (p.team === 'H');
       const bodyColor = p.gk ? 0xEAB308 : (isHome ? 0x004D98 : 0xF8FAFC);
-      const trimColor = isHome ? 0xA50044 : 0x00E5FF;
+      const shortsColor = p.gk ? 0x1E293B : (isHome ? 0x002B5C : 0x0F172A);
 
-      const torso = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.45, 0.36, 1.35, 16),
-        new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.35 })
-      );
-      torso.position.y = 0.85; torso.castShadow = true;
-      grp.add(torso);
-
-      const stripe = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.47, 0.44, 0.45, 16),
-        new THREE.MeshStandardMaterial({ color: trimColor, roughness: 0.4 })
-      );
-      stripe.position.y = 1.05;
-      grp.add(stripe);
-
+      // 1. Cubic Head (BoxGeometry(0.50, 0.50, 0.50), skin tone 0xF5D0A9)
       const head = new THREE.Mesh(
-        new THREE.SphereGeometry(0.32, 16, 16),
-        new THREE.MeshStandardMaterial({ color: 0xFDE68A, roughness: 0.5 })
+        new THREE.BoxGeometry(0.50, 0.50, 0.50),
+        new THREE.MeshStandardMaterial({ color: 0xF5D0A9, roughness: 0.6 })
       );
-      head.position.y = 1.82; head.castShadow = true;
+      head.position.y = 1.95;
+      head.castShadow = true;
       grp.add(head);
 
+      // 2. Blocky Hair / Cap Visor (BoxGeometry(0.54, 0.16, 0.54))
+      const hairColor = p.gk ? 0xF59E0B : 0x1E293B;
+      const hair = new THREE.Mesh(
+        new THREE.BoxGeometry(0.54, 0.16, 0.54),
+        new THREE.MeshStandardMaterial({ color: hairColor, roughness: 0.7 })
+      );
+      hair.position.y = 2.16;
+      hair.castShadow = true;
+      grp.add(hair);
+
+      // 3. Two Small Front Eyes (BoxGeometry(0.08, 0.08, 0.05)) on +z face
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0F172A });
+      const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.05), eyeMat);
+      eyeL.position.set(-0.12, 1.95, 0.26);
+      grp.add(eyeL);
+
+      const eyeR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.05), eyeMat.clone());
+      eyeR.position.set(0.12, 1.95, 0.26);
+      grp.add(eyeR);
+
+      // 4. Blocky Torso (BoxGeometry(0.62, 0.78, 0.34)) with Kit Texture
+      const kitTex = p.gk ? sharedKitTexGK : (isHome ? sharedKitTexHome : sharedKitTexAway);
+      const torso = new THREE.Mesh(
+        new THREE.BoxGeometry(0.62, 0.78, 0.34),
+        new THREE.MeshStandardMaterial({ map: kitTex, roughness: 0.4 })
+      );
+      torso.position.y = 1.28;
+      torso.castShadow = true;
+      grp.add(torso);
+
+      // 5. Articulated Left & Right Arms (BoxGeometry(0.22, 0.68, 0.24) with shoulder pivot)
+      const armGeoL = new THREE.BoxGeometry(0.22, 0.68, 0.24);
+      armGeoL.translate(0, -0.28, 0);
+      const armGeoR = new THREE.BoxGeometry(0.22, 0.68, 0.24);
+      armGeoR.translate(0, -0.28, 0);
+      const armMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.4 });
+
+      const leftArm = new THREE.Mesh(armGeoL, armMat);
+      leftArm.position.set(-0.44, 1.60, 0);
+      leftArm.castShadow = true;
+      grp.add(leftArm);
+
+      const rightArm = new THREE.Mesh(armGeoR, armMat.clone());
+      rightArm.position.set(0.44, 1.60, 0);
+      rightArm.castShadow = true;
+      grp.add(rightArm);
+
+      // 6. Articulated Left & Right Legs (BoxGeometry(0.25, 0.72, 0.26) with hip pivot)
+      const legGeoL = new THREE.BoxGeometry(0.25, 0.72, 0.26);
+      legGeoL.translate(0, -0.34, 0);
+      const legGeoR = new THREE.BoxGeometry(0.25, 0.72, 0.26);
+      legGeoR.translate(0, -0.34, 0);
+      const legMat = new THREE.MeshStandardMaterial({ color: shortsColor, roughness: 0.5 });
+
+      const leftLeg = new THREE.Mesh(legGeoL, legMat);
+      leftLeg.position.set(-0.17, 0.86, 0);
+      leftLeg.castShadow = true;
+      grp.add(leftLeg);
+
+      const rightLeg = new THREE.Mesh(legGeoR, legMat.clone());
+      rightLeg.position.set(0.17, 0.86, 0);
+      rightLeg.castShadow = true;
+      grp.add(rightLeg);
+
+      // 7. Ground Foot Ring
       const ring = new THREE.Mesh(
         new THREE.RingGeometry(0.55, 0.78, 24),
         new THREE.MeshBasicMaterial({
@@ -1215,13 +1569,28 @@ function initMatchData(data) {
           opacity: 0.22
         })
       );
-      ring.rotation.x = -Math.PI / 2; ring.position.y = 0.04;
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.04;
       grp.add(ring);
 
+      // 8. Floating Jersey Number Sprite
       grp.add(makeNumberSprite(p.num, p.team, p.gk));
+
       grp.visible = false;
       scene.add(grp);
-      playerMeshes[p.idx] = { group: grp, ring: ring, torso: torso, team: p.team, num: p.num };
+
+      playerMeshes[p.idx] = {
+        group: grp,
+        ring: ring,
+        torso: torso,
+        leftArm: leftArm,
+        rightArm: rightArm,
+        leftLeg: leftLeg,
+        rightLeg: rightLeg,
+        yaw: 0.0,
+        team: p.team,
+        num: p.num
+      };
     });
   }
 }
@@ -1271,12 +1640,14 @@ function stepFrames(delta) {
   if (totalFrames > 0) {
     currentFrameFloat = Math.min(totalFrames - 1, Math.max(0, currentFrameFloat + delta));
     if (slider) slider.value = currentFrameFloat;
+    prevBallX = null; prevBallZ = null;
   }
 }
 function onSliderInput(val) {
   const parsed = parseFloat(val);
   if (!isNaN(parsed) && totalFrames > 0) {
     currentFrameFloat = Math.max(0, Math.min(totalFrames - 1, parsed));
+    prevBallX = null; prevBallZ = null;
   }
 }
 function setSpeed(spd) {
@@ -1335,18 +1706,182 @@ window.addEventListener('keydown', (e) => {
   else if (e.key === '3') { setCameraMode('TOP'); }
   else if (e.key === '4') { setCameraMode('FREE'); }
   else if (e.key === 'm' || e.key === 'M') { setBrainMode(brainMode === 'OUR' ? 'NAIVE' : 'OUR'); }
+  else if (e.key === 'j' || e.key === 'J') { jumpToAdjacentEvent(-1); }
+  else if (e.key === 'k' || e.key === 'K') { jumpToAdjacentEvent(1); }
+  else if (e.key === 'h' || e.key === 'H') { toggleCleanHud(); }
 });
 
-let lastEventCode = 'NONE';
+// --- CLEAN PITCH VIEW (CINEMA MODE) TOGGLE ---
+function toggleCleanHud() {
+  isCleanHud = !isCleanHud;
+  document.body.classList.toggle('clean-hud-mode', isCleanHud);
+  const btn = domCache.btnCleanHud || document.getElementById('btn-clean-hud');
+  if (btn) {
+    btn.classList.toggle('active', isCleanHud);
+    btn.innerText = isCleanHud ? '👁️‍🗨️ Modo Cine' : '👁️ Vista';
+  }
+  // Collapse moments drawer if open to maximize pitch visibility
+  if (isCleanHud && momentsViewMode === 'EXPANDED') {
+    cycleMomentsViewMode();
+  }
+  triggerEventToast(
+    isCleanHud ? '👁️ VISTA LIMPIA ACTIVADA (Paneles laterales ocultos)' : '👁️ VISTA COMPLETA RESTAURADA',
+    'linear-gradient(90deg, #004D98, #EDBB00)'
+  );
+}
+
+// --- KEY MOMENTS NAVIGATION & FILTERING HANDLERS ---
+function setEventFilter(filterType) {
+  currentEventFilter = filterType;
+  ['all', 'turnover', 'jev'].forEach(k => {
+    const el = document.getElementById('filter-moments-' + k);
+    if (el) el.classList.remove('active');
+  });
+  const activeEl = document.getElementById('filter-moments-' + filterType.toLowerCase());
+  if (activeEl) activeEl.classList.add('active');
+
+  // Filter timeline pips on slider track
+  const pips = document.querySelectorAll('.timeline-pip');
+  pips.forEach(pip => {
+    const type = pip.dataset.type;
+    if (filterType === 'ALL' || type === filterType) {
+      pip.style.display = 'block';
+    } else {
+      pip.style.display = 'none';
+    }
+  });
+
+  renderMomentChips();
+}
+
+function renderMomentChips() {
+  const chipsRow = (domCache && domCache.chipsRow) ? domCache.chipsRow : document.getElementById('turnover-chips-row');
+  if (!chipsRow) return;
+  chipsRow.innerHTML = '';
+  currentRenderedChips = [];
+  lastHudState.activeMomentIndex = -1;
+
+  const filteredEvents = timelineEvents.filter(e => {
+    if (currentEventFilter === 'TURNOVER') return e.type === 'TURNOVER';
+    if (currentEventFilter === 'JEV') return e.type === 'JEV';
+    return true;
+  });
+
+  const countBadge = (domCache && domCache.momentsCount) ? domCache.momentsCount : document.getElementById('moments-count');
+  if (countBadge) countBadge.innerText = filteredEvents.length;
+
+  if (filteredEvents.length > 0) {
+    filteredEvents.forEach((evt) => {
+      const btn = document.createElement('button');
+      btn.className = `chip-btn ${evt.type === 'JEV' ? 'chip-jev' : ''}`;
+      btn.innerText = evt.label;
+      btn.dataset.type = evt.type;
+      btn.dataset.frame = evt.frame_idx;
+      btn.onclick = () => {
+        currentFrameFloat = Math.max(0, evt.frame_idx - (evt.type === 'JEV' ? 8 : 18));
+        if (slider) slider.value = currentFrameFloat;
+        prevBallX = null; prevBallZ = null;
+        triggerEventToast(
+          evt.label,
+          evt.type === 'JEV' ? 'linear-gradient(90deg,#9333EA,#A855F7)' : (evt.team === 'H' ? 'linear-gradient(90deg,#004D98,#A50044)' : '#0284C7')
+        );
+      };
+      chipsRow.appendChild(btn);
+      currentRenderedChips.push({ el: btn, event: evt });
+    });
+  } else {
+    const span = document.createElement('span');
+    span.style.color = '#94A3B8';
+    span.style.fontStyle = 'italic';
+    span.innerText = 'No hay momentos con este filtro';
+    chipsRow.appendChild(span);
+  }
+}
+
+function cycleMomentsViewMode() {
+  const chipsRow = (domCache && domCache.chipsRow) ? domCache.chipsRow : document.getElementById('turnover-chips-row');
+  const btn = document.getElementById('btn-toggle-moments');
+  if (!chipsRow) return;
+
+  if (momentsViewMode === 'COMPACT') {
+    momentsViewMode = 'EXPANDED';
+    chipsRow.className = 'turnover-chips expanded-drawer';
+    if (btn) btn.innerText = '🔽 Ocultar Lista';
+  } else if (momentsViewMode === 'EXPANDED') {
+    momentsViewMode = 'COLLAPSED';
+    chipsRow.className = 'turnover-chips collapsed-hidden';
+    if (btn) btn.innerText = '▶️ Mostrar Momentos';
+  } else {
+    momentsViewMode = 'COMPACT';
+    chipsRow.className = 'turnover-chips compact-carousel';
+    if (btn) btn.innerText = '🔼 Expandir Lista';
+  }
+}
+
+function jumpToAdjacentEvent(direction) {
+  if (!timelineEvents || timelineEvents.length === 0) return;
+  const eligibleEvents = timelineEvents.filter(e => {
+    if (currentEventFilter === 'TURNOVER') return e.type === 'TURNOVER';
+    if (currentEventFilter === 'JEV') return e.type === 'JEV';
+    return true;
+  });
+  if (eligibleEvents.length === 0) return;
+
+  let targetEvt = null;
+  if (direction < 0) {
+    for (let i = eligibleEvents.length - 1; i >= 0; i--) {
+      if (eligibleEvents[i].frame_idx < currentFrameFloat - 10) {
+        targetEvt = eligibleEvents[i];
+        break;
+      }
+    }
+    if (!targetEvt) targetEvt = eligibleEvents[eligibleEvents.length - 1];
+  } else {
+    for (let i = 0; i < eligibleEvents.length; i++) {
+      if (eligibleEvents[i].frame_idx > currentFrameFloat + 5) {
+        targetEvt = eligibleEvents[i];
+        break;
+      }
+    }
+    if (!targetEvt) targetEvt = eligibleEvents[0];
+  }
+
+  if (targetEvt) {
+    currentFrameFloat = Math.max(0, targetEvt.frame_idx - (targetEvt.type === 'JEV' ? 8 : 18));
+    if (slider) slider.value = currentFrameFloat;
+    prevBallX = null; prevBallZ = null;
+    triggerEventToast(
+      targetEvt.label,
+      targetEvt.type === 'JEV' ? 'linear-gradient(90deg,#9333EA,#A855F7)' : (targetEvt.team === 'H' ? 'linear-gradient(90deg,#004D98,#A50044)' : '#0284C7')
+    );
+  }
+}
+
+// Horizontal mouse-wheel scrolling for compact carousel
+const _initialChipsRow = document.getElementById('turnover-chips-row');
+if (_initialChipsRow) {
+  _initialChipsRow.addEventListener('wheel', (e) => {
+    if (momentsViewMode === 'COMPACT') {
+      e.preventDefault();
+      _initialChipsRow.scrollLeft += e.deltaY;
+    }
+  }, { passive: false });
+}
+
 function triggerEventToast(text, bgColor) {
   const toast = document.getElementById('event-toast');
+  if (toastTimeoutId !== null) {
+    clearTimeout(toastTimeoutId);
+    toastTimeoutId = null;
+  }
   toast.innerText = text;
   toast.style.background = bgColor;
   toast.style.opacity = '1';
   toast.style.transform = 'translateX(-50%) scale(1.06)';
-  setTimeout(() => {
+  toastTimeoutId = setTimeout(() => {
     toast.style.opacity = '0';
     toast.style.transform = 'translateX(-50%) scale(0.95)';
+    toastTimeoutId = null;
   }, 1400);
 }
 
@@ -1418,12 +1953,25 @@ window.PossessionViewerAPI = {
     const targetFrame = Math.max(0, Math.min(totalFrames - 1, sec * fps));
     currentFrameFloat = targetFrame;
     if (slider) slider.value = targetFrame;
+    prevBallX = null; prevBallZ = null;
   },
   togglePlay: function() {
     togglePlay();
   },
   reloadData: function(cb) {
     reloadDataPayload(cb);
+  },
+  jumpToAdjacentEvent: function(dir) {
+    jumpToAdjacentEvent(dir);
+  },
+  setEventFilter: function(filter) {
+    setEventFilter(filter);
+  },
+  cycleMomentsViewMode: function() {
+    cycleMomentsViewMode();
+  },
+  toggleCleanHud: function() {
+    toggleCleanHud();
   }
 };
 
@@ -1466,6 +2014,18 @@ function animate(now) {
   ballShadow.position.set(bx, 0.03, bz_pitch);
   const shadowScale = Math.max(0.4, 1.1 - by_elev * 0.18);
   ballShadow.scale.set(shadowScale, shadowScale, 1);
+
+  // Physical Ball Rolling Rotation proportional to displacement over ball radius (0.46m)
+  if (prevBallX !== null && prevBallZ !== null) {
+    const dbx = bx - prevBallX;
+    const dbz = bz_pitch - prevBallZ;
+    if (Math.hypot(dbx, dbz) < 15.0) {
+      ballMesh.rotation.z -= dbx / 0.46;
+      ballMesh.rotation.x += dbz / 0.46;
+    }
+  }
+  prevBallX = bx;
+  prevBallZ = bz_pitch;
 
   // Determine active possession team based on selected Brain Mode ('OUR' vs 'NAIVE')
   const activeTeam = (brainMode === 'OUR') ? f0.ot : f0.nt;
@@ -1589,6 +2149,35 @@ function animate(now) {
     pm.group.position.set(px, 0, -py);
     pm.group.visible = true;
 
+    // Velocity & Heading Calculation
+    const vx = _scratchP1Map[pIdx] ? (_scratchP1Map[pIdx][1] - item[1]) * fps : 0.0;
+    const vz = _scratchP1Map[pIdx] ? -(_scratchP1Map[pIdx][2] - item[2]) * fps : 0.0;
+    const pSpeed = Math.hypot(vx, vz);
+
+    // Target Yaw: Face movement direction if running, or face ball if nearly stationary
+    let targetYaw;
+    if (pSpeed > 0.45) {
+      targetYaw = Math.atan2(vx, vz);
+    } else {
+      targetYaw = Math.atan2(bx - px, bz_pitch - (-py));
+    }
+
+    // Smooth angle interpolation handling [-PI, PI] wrap-around
+    let angleDiff = targetYaw - pm.yaw;
+    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+    pm.yaw += angleDiff * Math.min(1.0, dt * 10.0);
+    pm.group.rotation.y = pm.yaw;
+
+    // Minecraft/Roblox Limb Swing Animation
+    const swingAmp = Math.min(0.85, pSpeed * 0.11);
+    const walkPhase = now * 0.012 + pIdx * 1.7;
+
+    pm.leftArm.rotation.x = Math.sin(walkPhase) * swingAmp;
+    pm.rightArm.rotation.x = -Math.sin(walkPhase) * swingAmp;
+    pm.leftLeg.rotation.x = -Math.sin(walkPhase) * swingAmp * 1.1;
+    pm.rightLeg.rotation.x = Math.sin(walkPhase) * swingAmp * 1.1;
+
     if (pIdx === activeOwnerIdx) {
       ownerPos = pm.group.position;
       pm.ring.material.opacity = 0.95;
@@ -1612,7 +2201,7 @@ function animate(now) {
 
     // Floating diamond rotation & vertical bobbing
     beaconDiamond.rotation.y += dt * 3.5;
-    beaconDiamond.position.y = 4.1 + Math.sin(now * 0.006) * 0.22;
+    beaconDiamond.position.y = 4.3 + Math.sin(now * 0.006) * 0.22;
 
     // Ground ring pulsing
     const ringPulse = 1.0 + 0.18 * Math.sin(now * 0.008);
@@ -1630,7 +2219,7 @@ function animate(now) {
       const u = i / 20.0;
       const tx = ownerPos.x + (bx - ownerPos.x) * u;
       const tz = ownerPos.z + (bz_pitch - ownerPos.z) * u;
-      const ty = 0.25 + (by_elev - 0.25) * u + Math.sin(u * Math.PI) * 1.35;
+      const ty = 1.28 + (by_elev - 1.28) * u + Math.sin(u * Math.PI) * 1.25;
       posAttr.setXYZ(i, tx, ty, tz);
     }
     posAttr.needsUpdate = true;
@@ -1647,7 +2236,7 @@ function animate(now) {
       const u = (i / TETHER_BEADS_COUNT + flowPhase) % 1.0;
       const tx = ownerPos.x + (bx - ownerPos.x) * u;
       const tz = ownerPos.z + (bz_pitch - ownerPos.z) * u;
-      const ty = 0.25 + (by_elev - 0.25) * u + Math.sin(u * Math.PI) * 1.35;
+      const ty = 1.28 + (by_elev - 1.28) * u + Math.sin(u * Math.PI) * 1.25;
       bead.position.set(tx, ty, tz);
 
       const arcPulse = 1.0 + 0.55 * Math.sin(u * Math.PI);
@@ -1714,111 +2303,176 @@ function animate(now) {
   }
   camera.lookAt(cameraTarget);
 
-  // Update HUD Scoreboard & Narrator
+  // Update HUD Scoreboard & Narrator with State Dirty-Checking
   const probHomePct = (brainMode === 'OUR') ? Math.round(f0.op * 100) : (f0.nt === 'H' ? 92 : 8);
-  const probAwayPct = 100 - probHomePct;
-  document.getElementById('lbl-prob-home').innerText = probHomePct + '%';
-  document.getElementById('lbl-prob-away').innerText = probAwayPct + '%';
-  document.getElementById('tug-fill-home').style.width = probHomePct + '%';
-
-  const mins = Math.floor(f0.t / 60);
-  const secs = (f0.t % 60).toFixed(1).padStart(4, '0');
-  document.getElementById('lbl-clock').innerText = `⏱️ 0${mins}:${secs} (Frame ${f0.fid})`;
-  document.getElementById('stat-our-sw').innerText = f0.our_sw;
-  document.getElementById('stat-naive-sw').innerText = f0.nai_sw;
-  document.getElementById('stat-saved').innerText = Math.max(0, f0.nai_sw - f0.our_sw);
-  document.getElementById('ball-speed-badge').innerText = `Vel. Balón: ${f0.spd.toFixed(1)} m/s | Altura 3D: ${by_elev.toFixed(1)}m`;
-
-  const flkAlert = document.getElementById('flicker-alert');
-  if (brainMode === 'NAIVE' && f0.flk === 1) {
-    flkAlert.style.display = 'inline-block';
-    document.getElementById('commentary-text').innerText = '⚠️ ¡ERROR EN IA COMÚN! Como el balón pasó cerca de un rival, la IA común cree erróneamente que cambió de dueño.';
-  } else {
-    flkAlert.style.display = 'none';
-    document.getElementById('commentary-text').innerText = f0.msg;
+  if (probHomePct !== lastHudState.probHomePct) {
+    lastHudState.probHomePct = probHomePct;
+    const probAwayPct = 100 - probHomePct;
+    if (domCache.lblProbHome) domCache.lblProbHome.innerText = probHomePct + '%';
+    if (domCache.lblProbAway) domCache.lblProbAway.innerText = probAwayPct + '%';
+    if (domCache.tugFillHome) domCache.tugFillHome.style.width = probHomePct + '%';
   }
 
-  // Update TV-Style Active Carrier HUD Card
-  const carrierCard = document.getElementById('carrier-hud-card');
-  if (carrierCard && window.MATCH_DATA && window.MATCH_DATA.roster) {
+  if (f0.fid !== lastHudState.frameId) {
+    lastHudState.frameId = f0.fid;
+    const mins = Math.floor(f0.t / 60);
+    const minsStr = String(mins).padStart(2, '0');
+    const secs = (f0.t % 60).toFixed(1).padStart(4, '0');
+    if (domCache.lblClock) domCache.lblClock.innerText = `⏱️ ${minsStr}:${secs} (Frame ${f0.fid})`;
+  }
+
+  if (f0.our_sw !== lastHudState.ourSw) {
+    lastHudState.ourSw = f0.our_sw;
+    if (domCache.statOurSw) domCache.statOurSw.innerText = f0.our_sw;
+  }
+
+  if (f0.nai_sw !== lastHudState.naiSw) {
+    lastHudState.naiSw = f0.nai_sw;
+    if (domCache.statNaiveSw) domCache.statNaiveSw.innerText = f0.nai_sw;
+  }
+
+  const savedSw = Math.max(0, f0.nai_sw - f0.our_sw);
+  if (savedSw !== lastHudState.statSaved) {
+    lastHudState.statSaved = savedSw;
+    if (domCache.statSaved) domCache.statSaved.innerText = savedSw;
+  }
+
+  const speedBadgeStr = `Vel. Balón: ${f0.spd.toFixed(1)} m/s | Altura 3D: ${by_elev.toFixed(1)}m`;
+  if (speedBadgeStr !== lastHudState.speedBadgeStr) {
+    lastHudState.speedBadgeStr = speedBadgeStr;
+    if (domCache.ballSpeedBadge) domCache.ballSpeedBadge.innerText = speedBadgeStr;
+  }
+
+  const isFlicker = (brainMode === 'NAIVE' && f0.flk === 1);
+  if (isFlicker !== lastHudState.flickerVisible) {
+    lastHudState.flickerVisible = isFlicker;
+    if (domCache.flickerAlert) domCache.flickerAlert.style.display = isFlicker ? 'inline-block' : 'none';
+  }
+
+  const commMsg = isFlicker
+    ? '⚠️ ¡ERROR EN IA COMÚN! Como el balón pasó cerca de un rival, la IA común cree erróneamente que cambió de dueño.'
+    : f0.msg;
+  if (commMsg !== lastHudState.commentaryStr) {
+    lastHudState.commentaryStr = commMsg;
+    if (domCache.commentaryText) domCache.commentaryText.innerText = commMsg;
+  }
+
+  // Update TV-Style Active Carrier HUD Card with Dirty-Checking
+  if (domCache.carrierCard && window.MATCH_DATA && window.MATCH_DATA.roster) {
     const rItem = window.MATCH_DATA.roster[activeOwnerIdx];
     const pNum = rItem ? rItem.num : (f0.own >= 0 && window.MATCH_DATA.roster[f0.own] ? window.MATCH_DATA.roster[f0.own].num : 10);
     const pTeam = (rItem && brainMode === 'NAIVE') ? rItem.team : activeTeam;
     const isHome = (pTeam === 'H');
 
-    const crestEl = document.getElementById('carrier-crest');
-    const titleEl = document.getElementById('carrier-player-title');
-    const teamEl = document.getElementById('carrier-team-name');
-    const jerseyEl = document.getElementById('carrier-jersey-box');
-    const accentEl = document.getElementById('carrier-accent-bar');
-    const statusEl = document.getElementById('carrier-status-badge');
-    const brainTagEl = document.getElementById('carrier-brain-tag');
-
-    if (brainTagEl) {
-      brainTagEl.innerText = (brainMode === 'OUR') ? 'NUESTRA IA' : 'IA COMÚN';
-      brainTagEl.style.color = (brainMode === 'OUR') ? 'var(--barca-gold)' : '#F87171';
+    let statusCode = 'CONTROL';
+    if (f0.v === 0) {
+      statusCode = 'DEAD';
+    } else if (brainMode === 'OUR' && (f0.jev === 1 || jevVisualAlpha > 0.05)) {
+      statusCode = 'JEV';
+    } else if (brainMode === 'OUR' && (f0.sh === 1 || f0.ev === 'SHIELD')) {
+      statusCode = 'SHIELD';
     }
 
-    if (isHome) {
-      carrierCard.style.borderLeftColor = 'var(--barca-gold)';
-      if (crestEl) {
-        crestEl.innerText = 'FCB';
-        crestEl.style.background = 'conic-gradient(#004D98 0deg 180deg, #A50044 180deg 360deg)';
-        crestEl.style.borderColor = 'var(--barca-gold)';
-        crestEl.style.boxShadow = '0 0 12px rgba(237,187,0,0.45)';
-      }
-      if (teamEl) teamEl.innerText = 'FC Barcelona (Local)';
-      if (jerseyEl) {
-        jerseyEl.innerText = `#${pNum}`;
-        jerseyEl.style.borderColor = 'var(--barca-gold)';
-        jerseyEl.style.color = 'var(--barca-gold)';
-      }
-      if (titleEl) titleEl.innerText = `Dorsal #${pNum}${rItem && rItem.gk ? ' (Portero)' : ''}`;
-      if (accentEl) accentEl.style.background = 'linear-gradient(90deg, #004D98, #A50044, #EDBB00)';
-    } else {
-      carrierCard.style.borderLeftColor = 'var(--rival-cyan)';
-      if (crestEl) {
-        crestEl.innerText = 'RIV';
-        crestEl.style.background = 'linear-gradient(135deg, #0284C7, #00E5FF)';
-        crestEl.style.borderColor = 'var(--rival-cyan)';
-        crestEl.style.boxShadow = '0 0 12px rgba(0,229,255,0.45)';
-      }
-      if (teamEl) teamEl.innerText = 'Rival (Visitante)';
-      if (jerseyEl) {
-        jerseyEl.innerText = `#${pNum}`;
-        jerseyEl.style.borderColor = 'var(--rival-cyan)';
-        jerseyEl.style.color = 'var(--rival-cyan)';
-      }
-      if (titleEl) titleEl.innerText = `Dorsal #${pNum}${rItem && rItem.gk ? ' (Portero)' : ''}`;
-      if (accentEl) accentEl.style.background = 'linear-gradient(90deg, #0284C7, #00E5FF)';
-    }
+    const carrierSignature = `${brainMode}_${activeOwnerIdx}_${pTeam}_${statusCode}_${f0.v}_${pNum}`;
+    if (carrierSignature !== lastHudState.carrierSignature) {
+      lastHudState.carrierSignature = carrierSignature;
 
-    // Dynamic Role / Status Text
-    if (statusEl) {
-      if (f0.v === 0) {
-        statusEl.innerText = 'SIN CONTROL (BALÓN FUERA)';
-        statusEl.style.background = 'rgba(239, 68, 68, 0.25)';
-        statusEl.style.borderColor = '#EF4444';
-        statusEl.style.color = '#F87171';
-        statusEl.style.boxShadow = 'none';
-      } else if (brainMode === 'OUR' && (f0.jev === 1 || jevVisualAlpha > 0.05)) {
-        statusEl.innerText = 'BALÓN DIVIDIDO (JEV AI)';
-        statusEl.style.background = 'rgba(168, 85, 247, 0.3)';
-        statusEl.style.borderColor = '#A855F7';
-        statusEl.style.color = '#C084FC';
-        statusEl.style.boxShadow = '0 0 10px rgba(168, 85, 247, 0.5)';
-      } else if (brainMode === 'OUR' && (f0.sh === 1 || f0.ev === 'SHIELD')) {
-        statusEl.innerText = 'PASE EN TRÁNSITO';
-        statusEl.style.background = 'rgba(237, 187, 0, 0.25)';
-        statusEl.style.borderColor = '#EDBB00';
-        statusEl.style.color = '#EDBB00';
-        statusEl.style.boxShadow = 'none';
+      if (domCache.carrierBrainTag) {
+        domCache.carrierBrainTag.innerText = (brainMode === 'OUR') ? 'NUESTRA IA' : 'IA COMÚN';
+        domCache.carrierBrainTag.style.color = (brainMode === 'OUR') ? 'var(--barca-gold)' : '#F87171';
+      }
+
+      if (isHome) {
+        domCache.carrierCard.style.borderLeftColor = 'var(--barca-gold)';
+        if (domCache.carrierCrest) {
+          domCache.carrierCrest.innerText = 'FCB';
+          domCache.carrierCrest.style.background = 'conic-gradient(#004D98 0deg 180deg, #A50044 180deg 360deg)';
+          domCache.carrierCrest.style.borderColor = 'var(--barca-gold)';
+          domCache.carrierCrest.style.boxShadow = '0 0 12px rgba(237,187,0,0.45)';
+        }
+        if (domCache.carrierTeamName) domCache.carrierTeamName.innerText = 'FC Barcelona (Local)';
+        if (domCache.carrierJerseyBox) {
+          domCache.carrierJerseyBox.innerText = `#${pNum}`;
+          domCache.carrierJerseyBox.style.borderColor = 'var(--barca-gold)';
+          domCache.carrierJerseyBox.style.color = 'var(--barca-gold)';
+        }
+        if (domCache.carrierPlayerTitle) domCache.carrierPlayerTitle.innerText = `Dorsal #${pNum}${rItem && rItem.gk ? ' (Portero)' : ''}`;
+        if (domCache.carrierAccentBar) domCache.carrierAccentBar.style.background = 'linear-gradient(90deg, #004D98, #A50044, #EDBB00)';
       } else {
-        statusEl.innerText = 'EN CONTROL';
-        statusEl.style.background = 'rgba(34, 197, 94, 0.25)';
-        statusEl.style.borderColor = '#22C55E';
-        statusEl.style.color = '#4ADE80';
-        statusEl.style.boxShadow = 'none';
+        domCache.carrierCard.style.borderLeftColor = 'var(--rival-cyan)';
+        if (domCache.carrierCrest) {
+          domCache.carrierCrest.innerText = 'RIV';
+          domCache.carrierCrest.style.background = 'linear-gradient(135deg, #0284C7, #00E5FF)';
+          domCache.carrierCrest.style.borderColor = 'var(--rival-cyan)';
+          domCache.carrierCrest.style.boxShadow = '0 0 12px rgba(0,229,255,0.45)';
+        }
+        if (domCache.carrierTeamName) domCache.carrierTeamName.innerText = 'Rival (Visitante)';
+        if (domCache.carrierJerseyBox) {
+          domCache.carrierJerseyBox.innerText = `#${pNum}`;
+          domCache.carrierJerseyBox.style.borderColor = 'var(--rival-cyan)';
+          domCache.carrierJerseyBox.style.color = 'var(--rival-cyan)';
+        }
+        if (domCache.carrierPlayerTitle) domCache.carrierPlayerTitle.innerText = `Dorsal #${pNum}${rItem && rItem.gk ? ' (Portero)' : ''}`;
+        if (domCache.carrierAccentBar) domCache.carrierAccentBar.style.background = 'linear-gradient(90deg, #0284C7, #00E5FF)';
+      }
+
+      // Dynamic Role / Status Text
+      if (domCache.carrierStatusBadge) {
+        if (statusCode === 'DEAD') {
+          domCache.carrierStatusBadge.innerText = 'SIN CONTROL (BALÓN FUERA)';
+          domCache.carrierStatusBadge.style.background = 'rgba(239, 68, 68, 0.25)';
+          domCache.carrierStatusBadge.style.borderColor = '#EF4444';
+          domCache.carrierStatusBadge.style.color = '#F87171';
+          domCache.carrierStatusBadge.style.boxShadow = 'none';
+        } else if (statusCode === 'JEV') {
+          domCache.carrierStatusBadge.innerText = 'BALÓN DIVIDIDO (JEV AI)';
+          domCache.carrierStatusBadge.style.background = 'rgba(168, 85, 247, 0.3)';
+          domCache.carrierStatusBadge.style.borderColor = '#A855F7';
+          domCache.carrierStatusBadge.style.color = '#C084FC';
+          domCache.carrierStatusBadge.style.boxShadow = '0 0 10px rgba(168, 85, 247, 0.5)';
+        } else if (statusCode === 'SHIELD') {
+          domCache.carrierStatusBadge.innerText = 'PASE EN TRÁNSITO';
+          domCache.carrierStatusBadge.style.background = 'rgba(237, 187, 0, 0.25)';
+          domCache.carrierStatusBadge.style.borderColor = '#EDBB00';
+          domCache.carrierStatusBadge.style.color = '#EDBB00';
+          domCache.carrierStatusBadge.style.boxShadow = 'none';
+        } else {
+          domCache.carrierStatusBadge.innerText = 'EN CONTROL';
+          domCache.carrierStatusBadge.style.background = 'rgba(34, 197, 94, 0.25)';
+          domCache.carrierStatusBadge.style.borderColor = '#22C55E';
+          domCache.carrierStatusBadge.style.color = '#4ADE80';
+          domCache.carrierStatusBadge.style.boxShadow = '0 0 10px rgba(34, 197, 94, 0.35)';
+        }
+      }
+    }
+  }
+
+  // Active Key Moment Chip Highlighting & Auto-Scroll (Zero-GC Dirty-Checking)
+  if (currentRenderedChips.length > 0) {
+    let activeMomentIdx = -1;
+    for (let i = currentRenderedChips.length - 1; i >= 0; i--) {
+      if (currentFrameFloat >= currentRenderedChips[i].event.frame_idx - 5) {
+        activeMomentIdx = i;
+        break;
+      }
+    }
+    if (activeMomentIdx !== lastHudState.activeMomentIndex) {
+      if (lastHudState.activeMomentIndex >= 0 && currentRenderedChips[lastHudState.activeMomentIndex]) {
+        currentRenderedChips[lastHudState.activeMomentIndex].el.classList.remove('active-moment');
+      }
+      lastHudState.activeMomentIndex = activeMomentIdx;
+      if (activeMomentIdx >= 0 && currentRenderedChips[activeMomentIdx]) {
+        const activeChip = currentRenderedChips[activeMomentIdx].el;
+        activeChip.classList.add('active-moment');
+        if (momentsViewMode === 'COMPACT' && domCache.chipsRow) {
+          const containerRect = domCache.chipsRow.getBoundingClientRect();
+          const chipRect = activeChip.getBoundingClientRect();
+          const offset = chipRect.left - containerRect.left;
+          domCache.chipsRow.scrollTo({
+            left: domCache.chipsRow.scrollLeft + offset - (domCache.chipsRow.clientWidth / 2) + (activeChip.clientWidth / 2),
+            behavior: 'smooth'
+          });
+        }
       }
     }
   }

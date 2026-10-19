@@ -322,19 +322,27 @@ Start-Process artifacts\visualizations\viewer.html
 * **Frontend Desacoblat i Zero-CORS:** El codi visual resideix a `artifacts/visualizations/viewer.html`, estrictament separat de `match_payload.js` (`window.MATCH_DATA = {...};`) i `match_payload.json`. Evita les restriccions locals de CORS dels navegadors en obrir directament amb doble clic via `file://`.
 * **Guàrdia Anti-Sobreescriptura:** Executar Python actualitza sempre les dades del partit preservant qualsevol edició visual o de Three.js manual a `viewer.html` tret que s'especifiqui `--reset-viewer`.
 * **Recàrrega en Calent a l'App:** Prem **🔄 Recargar Datos** a la barra inferior per refrescar `match_payload.js` en viu sense perdre la vista de càmera ni la velocitat de reproducció.
+* **Avatars de Jugadors Articulats en 3D Estil Minecraft / Roblox:** Models 3D totalment articulats amb caps cúbics, equipacions procedurals a ratlles (ratlles verticals blaugranes clàssiques amb rivets daurats per al FC Barcelona vs. pissarra i cian elèctric per al rival, i kit daurat per a porters), animació d'extremitats en cursa (balanceig de braços i cames proporcional a la velocitat) i rotació suau d'orientació (yaw).
+* **Pilota de Futbol 3D amb Relleu i Rodament Físic:** Textura procedural de panells hexagonals/pentagonals en blanc i negre, gàbia externa de relleu 3D i rotació de rodament físicament coherent amb la velocitat sobre la gespa respecte al radi de la pilota.
 * **Far 3D de Posseïdor Actiu Estil EA Sports FC:** Balisa dinàmica d'alta visibilitat ancorada al jugador en possessió, que inclou un anell pulsant sobre la gespa, un cilindre d'aura de focus zenital (`ConeGeometry`) i un diamant flotant. Els anells als peus dels jugadors sense pilota s'atenuen a una opacitat subtil de `0.22`, eliminant la saturació visual al camp. S'adapta dinàmicament tant a **🧠 La Nostra IA** (propietari probabilístic) com a **🤖 IA Comuna** (jugador més proper).
 * **Vincle Volumètric de Control (Cadena de Grans d'Energia):** Substitueix les línies de filferro 2D d'1px per una cadena de 16 esferes volumètriques 3D al llarg d'un arc parabòlic animat que connecta el pit del posseïdor legítim amb la trajectòria de la pilota.
 * **Estela de Cometa 3D Immune al Desplaçament (Scrub-Safe):** 18 esferes graduades que tracen l'estela de la pilota mitjançant mostreig temporal sub-frame fraccional, mantenint-se completament estable durant el rebobinament ràpid i escalant la seva longitud d'acord amb la velocitat de la pilota.
 * **Halo de Possessió Radiant a la Gespa:** Anell lluminós directament sota l'ombra de la pilota que pulsa amb el color de l'equip en possessió (degradat blaugrana per al FC Barcelona vs. cian per al rival).
 * **Pols Neuronal Violeta de Jev AI (System One):** Quan Jev resol un toc dividit al límit (`f0.jev === 1`), un giroscopi 3D violeta de doble anell contra-rotatori (`#A855F7`) s'activa amb una suau persistència visual de 0.45s perquè els judicis d'un sol fotograma siguin perfectament apreciables per l'espectador.
-* **Targeta HUD de Jugador Actiu Estil TV Broadcast:** Gràfic televisiu ancorat sota el marcador superior que mostra l'escut del club, dorsal gran i llegible (`#10`) i etiqueta d'estat de control en temps real (*CONTROL TOTAL*, *DISPUTADA*, etc.).
+* **Targeta HUD de Jugador Actiu amb Comprovació d'Estat (Dirty-Checking) a 60 FPS:** Gràfic televisiu ancorat sota el marcador superior que mostra l'escut del club, dorsal gran i llegible (`#10`) i etiqueta d'estat de control en temps real (*CONTROL TOTAL*, *DISPUTADA*, etc.). Impulsat per emmagatzematge en memòria cau sense cerques (`domCache`) i dirty-checking (`lastHudState`), eliminant recàlculs de disseny a cada fotograma.
+* **Gestor Plegable i Filtrable de Moments Clau:** Barra d'eines i calaix interactiu que ofereix:
+  - **Vista Plegable en 3 Modes:** `COMPACT` (carrusel horitzontal predeterminat d'1 fila amb desplaçament amb roda del ratolí), `EXPANDED` (calaix multilínea amb topall estricte d'alçada de 92px per no obstruir la gespa) i `COLLAPSED` (ocult).
+  - **Coalescència d'Esdeveniments:** Filtre intel·ligent de refredament (1.0s per a pèrdues/recuperacions, 2.0s per a duels de Jev AI) per evitar saturació de botons.
+  - **Píndoles de Filtrat Multicategoria:** Filtrat instantani (`Tots`, `⚡ Robatoris`, `🧠 Jev AI`) que sincronitza tant els pips de la línia de temps com els xips d'esdeveniments.
+  - **Salt Entre Moments Contigus:** Botons de navegació (`⏮️ Ant.` / `⏭️ Seg.` o tecles `J` / `K`) amb avisos flotants (toasts) protegits contra condicions de cursa.
+* **Vista Neta del Camp (Mode Cinema):** Botó `👁️ Vista` o tecla `H` per ocultar o mostrar suaument els panells laterals (`.legend-card` i `#carrier-hud-card`) i el calaix de moments per a una visibilitat completa del partit.
 * **Marcadors de Pèrdua/Recuperació a la Línia de Temps (Pips):** Marques interactives sobreposades sobre la barra de temps (pips daurats per a recuperacions/canvis de possessió i pips violetes per a intervencions de Jev AI) amb tooltips descriptius i navegació instantània en fer clic.
+* **Memòria Cau Persistent de Textures d'Equipació:** Emmagatzematge a nivell de mòdul per a les textures de samarretes blaugrana, rival i porter amb protecció contra doble eliminació (`dispose`), garantint zero fuites de memòria en recarregar dades en calent (`🔄 Recargar Datos`).
 * **Bucle de Renderització 100% Zero-GC a 60 FPS:** Motor d'animació d'alt rendiment lliure de recol·lecció d'escombraries mitjançant vectors i colors de treball preassignats (`_scratchV3`, `_scratchTarget`, `_scratchColorJev`, `_scratchP1Map`), eradicant micro-estrebades i caigudes de fotogrames.
-* **Alliberament Rigorós de Recursos GPU:** Neteja profunda amb crides explícites a `.dispose()` en geometries, materials i textures d'sprites de canvas en recarregar partits o canviar de conjunt de dades.
 * **API Global de Control IA (`window.PossessionViewerAPI`):** Preparada per a la integració amb Gemini Live i agents multimodals:
   - `getCurrentFrameState()`: Retorna el fotograma actiu, coordenades 3D de la pilota interpolades, equip en possessió i esdeveniments tàctics.
   - `captureCanvasBase64()`: Retorna `renderer.domElement.toDataURL('image/jpeg', 0.8)` (`preserveDrawingBuffer: true`).
-  - `setCameraMode(mode)`, `setBrainMode(mode)`, `setSpeed(speed)`, `seekToSecond(sec)`, `togglePlay()`.
+  - `setCameraMode(mode)`, `setBrainMode(mode)`, `setSpeed(speed)`, `seekToSecond(sec)`, `togglePlay()`, `toggleCleanHud()`, `jumpToAdjacentEvent(dir)`, `setEventFilter(filter)`, `cycleMomentsViewMode()`.
 * **Commutador de Comparació d'IA:** Alterna en temps real entre **🧠 La Nostra IA** (Viterbi + Jev) i la **🤖 IA Comuna** (heurística de jugador més proper).
 * **Escut 3D Anti-Robatori (Pass Shield):** Una esfera de filferro daurada que protegeix la pilota en passades filtrades d'alta velocitat quan creua a prop de rivals sense ser interceptada.
 * **4 Perspectives de Càmera:**
@@ -342,7 +350,7 @@ Start-Process artifacts\visualizations\viewer.html
   - 🚁 **Dron Proper:** Enfocament cinemàtic de seguiment a baixa alçada.
   - 🏟️ **Pissarra Aèria:** Vista zenital tàctica ortogonal 2D.
   - 🕹️ **Vista Lliure (Òrbita Manual):** Rotació completa en 360° mitjançant clic i arrossegament amb el ratolí i zoom amb la roda (12m a 140m).
-* **Dreceres de Teclat:** `Espai` (Pausar/Reprendre), `← / →` (-1s / +1s), `1-4` (Modes de Càmera), `M` (Alternar IA).
+* **Dreceres de Teclat:** `Espai` (Pausar/Reprendre), `← / →` (-1s / +1s), `1-4` (Modes de Càmera), `M` (Alternar IA), `H` (Vista Neta), `J` (Moment Anterior), `K` (Moment Següent).
 
 ---
 

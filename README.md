@@ -323,19 +323,27 @@ Start-Process artifacts\visualizations\viewer.html
 * **Decoupled Frontend & Zero-CORS Payload:** Visual code resides in `artifacts/visualizations/viewer.html`, strictly separated from `match_payload.js` (`window.MATCH_DATA = {...};`) and `match_payload.json`. Bypasses browser local CORS restrictions when opened directly via `file://`.
 * **Hot-Edit Protection Guard:** Re-running Python updates match payloads while preserving manual customizations in `viewer.html` unless `--reset-viewer` is passed explicitly.
 * **In-App Data Hot-Reload:** Click **🔄 Recargar Datos** on the bottom HUD to dynamically reload `match_payload.js` without losing camera view or playback speed.
+* **Minecraft / Roblox-Style Articulated 3D Player Avatars:** Fully articulated 3D player models featuring cubic heads, procedural striped team kits (FC Barcelona vertical Blaugrana stripes with gold trim vs. crisp slate/electric cyan for rivals, and gold keeper kits), running limb animations (swinging arms and legs proportional to speed), and smooth yaw heading orientation.
+* **High-Contrast 3D Relieved Rolling Soccer Ball:** Procedural black-and-white pentagonal/hexagonal canvas texture with a wireframe relief cage and physically simulated rolling rotation proportional to pitch velocity over ball radius.
 * **EA Sports FC-Style 3D Active Carrier Beacon:** High-visibility dynamic beacon anchored to the active ball carrier, featuring a turf pulsing ring, vertical spotlight aura cylinder (`ConeGeometry`), and floating diamond marker. Non-possessing player foot rings are muted to subtle `0.22` opacity, eliminating field visual clutter. Dynamically adapts in both **🧠 Nuestra IA** (probabilistic owner) and **🤖 IA Común** (closest player).
 * **Volumetric Control Tether (Energy Bead Chain):** Replaces flat 1px WebGL wire lines with a 16-node 3D volumetric sphere chain along an animated parabolic arc connecting the legitimate carrier's chest to the ball trajectory.
 * **Scrub-Safe 3D Ball Comet Motion Trail:** 18-sphere graduated motion trail trailing the ball, calculated via fractional sub-frame temporal sampling so the trail remains stable during rapid timeline scrubbing and scales dynamically with ball velocity.
 * **Dynamic Ground Possession Halo:** Radial glowing turf ring directly beneath the ball shadow that pulses with the controlling team's colors (Blaugrana gradient for FC Barcelona vs. Cyan for Opponent).
 * **Jev AI (System One) 3D Violet Neural Pulse:** Whenever Jev resolves a split-second disputed touch (`f0.jev === 1`), a counter-rotating dual-ring violet gyroscope (`#A855F7`) bursts into life with smooth 0.45s decay persistence so single-frame judgments are clearly visible to spectators.
-* **TV-Style Active Carrier HUD Card:** Top-anchored broadcast graphic showing team crest, bold jersey number (`#10`), and real-time possession state badge (*CONTROL TOTAL*, *DISPUTADA*, etc.).
+* **TV-Style Active Carrier HUD Card with 60 FPS DOM Dirty-Checking:** Top-anchored broadcast graphic showing team crest, bold jersey number (`#10`), and real-time possession state badge (*CONTROL TOTAL*, *DISPUTADA*, etc.). Driven by zero-lookup caching (`domCache`) and state dirty-checking (`lastHudState`) to eliminate per-frame layout thrashing.
+* **Collapsible & Filterable Key Moments Manager:** Compact toolbar and drawer featuring:
+  - **3-Mode Collapsible View:** `COMPACT` (default 1-row horizontal carousel with mouse-wheel scrolling), `EXPANDED` (scrollable multi-row drawer capped at a strict 92px height ceiling to prevent pitch obstruction), and `COLLAPSED` (hidden).
+  - **Event Coalescing:** Intelligent debouncing (1.0s cooldown on turnovers, 2.0s on Jev AI duels) preventing UI spam from single duels.
+  - **Multi-Category Filter Pills:** Instant filtering (`Todos`, `⚡ Robos`, `🧠 Jev AI`) filtering both timeline pips and moments chips synchronously.
+  - **Adjacent Moment Jumps:** Step forward/backward through key events (`⏮️ Ant.` / `⏭️ Sig.` or `J` / `K` keys) with race-condition protected event toasts.
+* **Clean Pitch View (Cinema Mode Toggle):** Click `👁️ Vista` or press key `H` to smoothly toggle side HUD panels (`.legend-card` and `#carrier-hud-card`) and drawer visibility for completely unobstructed pitch observation.
 * **Interactive Timeline Turnover Markers (Pips):** Micro-markers overlaid along the timeline scrubber track (golden pips for true turnovers, violet pips for Jev AI activations) with hover tooltips and instant seek-on-click navigation.
+* **Persistent Module-Level Kit Texture Caching:** Persistent GPU texture caching for jerseys and kits with double-disposal protection, ensuring leak-free performance across in-app hot-reloads (`🔄 Recargar Datos`).
 * **100% Zero-GC 60 FPS Render Loop:** High-performance animation loop utilizing pre-allocated module scratchpads (`_scratchV3`, `_scratchTarget`, `_scratchColorJev`, `_scratchP1Map`), eliminating garbage collection stutters and frame drops.
-* **Leak-Free GPU Resource Disposal:** Rigorous `.dispose()` cleanup of geometries, materials, and canvas sprite textures during match reloads or dataset switching.
 * **Realtime AI Controller API (`window.PossessionViewerAPI`):** Ready for Gemini Live / multimodal agent integration:
   - `getCurrentFrameState()`: Returns active frame, interpolated ball coordinates, active possession team, and tactical events.
   - `captureCanvasBase64()`: Returns `renderer.domElement.toDataURL('image/jpeg', 0.8)` (`preserveDrawingBuffer: true`).
-  - `setCameraMode(mode)`, `setBrainMode(mode)`, `setSpeed(speed)`, `seekToSecond(sec)`, `togglePlay()`.
+  - `setCameraMode(mode)`, `setBrainMode(mode)`, `setSpeed(speed)`, `seekToSecond(sec)`, `togglePlay()`, `toggleCleanHud()`, `jumpToAdjacentEvent(dir)`, `setEventFilter(filter)`, `cycleMomentsViewMode()`.
 * **Interactive AI Comparison Switch:** Real-time toggle between **🧠 Nuestra IA** (Viterbi + Jev) and **🤖 IA Común** (Nearest-Player heuristic).
 * **Escudo 3D Anti-Robo (Pass Shield):** An animated golden icosahedron wireframe protecting the ball during high-speed passes near rivals.
 * **4 Camera Perspectives:**
@@ -343,7 +351,7 @@ Start-Process artifacts\visualizations\viewer.html
   - 🚁 **Dron Cercano:** Close-up cinematic follow camera.
   - 🏟️ **Pizarra Aérea:** Orthogonal 2D tactical board view.
   - 🕹️ **Vista Libre (Órbita Manual):** Full 360° mouse drag orbit and scroll-wheel zoom (12m to 140m).
-* **Keyboard Hotkeys:** `Space` (Play/Pause), `← / →` (-1s / +1s), `1-4` (Camera Modes), `M` (AI Mode Switch).
+* **Keyboard Hotkeys:** `Space` (Play/Pause), `← / →` (-1s / +1s), `1-4` (Camera Modes), `M` (AI Mode Switch), `H` (Clean Pitch View), `J` (Previous Key Moment), `K` (Next Key Moment).
 
 ---
 
