@@ -194,16 +194,110 @@ The unified execution script [`run_submission_pipeline.py`](file:///run_submissi
 
 # 4. Predict on a single wide-format Metrica tracking table:
 .\.venv\Scripts\python.exe run_submission_pipeline.py --mode predict --frames ruta_Sample_Game_1_RawTrackingData.csv --output artifacts\mi_submission.csv
+
+# 5. Predict on official Metrica split Home & Away tracking tables (auto-detected multi-row format):
+.\.venv\Scripts\python.exe run_submission_pipeline.py --mode predict --frames data_metrica\Sample_Game_1_RawTrackingData_Home_Team.csv --players data_metrica\Sample_Game_1_RawTrackingData_Away_Team.csv --output artifacts\reintento_metrica.csv --live-jev --max-frames 2500
 ```
 
 #### CLI Flag Reference:
 * `--mode`: Execution mode (`verify`, `train`, `predict`). Default is `verify`.
-* `--frames`: Path to input `frame_df` CSV/Parquet or single wide-format Metrica tracking table.
-* `--players`: Optional path to input `player_tracks_df` CSV/Parquet (required if `--frames` is not a wide-format table).
+* `--frames`: Path to input `frame_df` CSV/Parquet, single wide-format tracking table, or Metrica Home tracking table.
+* `--players`: Path to input `player_tracks_df` CSV/Parquet, or Metrica Away tracking table (auto-detected).
 * `--meta`: Optional path to match metadata JSON (`match_id`, `sampling_rate_hz`, pitch dimensions).
 * `--model-bundle`: Path to serialized model `.pkl` bundle (default: `artifacts/barca_possession_mvp_v2.pkl`).
 * `--output`: Path to write the output submission CSV (default: `artifacts/submission_output.csv`).
 * `--live-jev`: Enables live TypeSafe AI (`Jev / System One`) API queries for ambiguous candidate frames using `TYPESAFE_API_KEY`.
+* `--max-frames`: Optional maximum number of frames to load for rapid testing.
+
+### Automated Batch Ingestion for Real Competition Data (`auto_process_competition.py`)
+
+When the final competition tracking data is released by FC Barcelona and Metrica Sports, [`auto_process_competition.py`](file:///auto_process_competition.py) serves as the **zero-configuration batch orchestrator**. It recursively discovers all tracking files in a target folder, detects their internal structure (split Metrica tables, single wide tables, or canonical pairs), pairs corresponding matches, executes full inference through the 5-task pipeline, and exports competition-compliant submission CSVs and diagnostic visualizations.
+
+#### 1. Supported Data Formats & Auto-Detection:
+* **Metrica Sports Split Tables (`metrica_split`):**
+  - Matches files like `*Home_Team.csv` and `*Away_Team.csv` for the same game.
+  - Automatically parses Metrica's 3-row headers, aligns timestamps, extracts ball coordinates, and transforms normalized `[0, 1]` coordinates into pitch meters centered at `(0, 0)` (`[-52.5, 52.5]` m x `[-34.0, 34.0]` m).
+* **Canonical Relational Tables (`canonical_pair`):**
+  - Matches frame metadata tables (`*frame*.csv/.parquet`) with long-format player trajectory tables (`*player*.csv/.parquet`).
+* **Single Wide Tracking Tables (`wide_single`):**
+  - Ingests single-file tracking dumps containing players and ball across columns (`Home_11_x, Home_11_y, Ball_x...`).
+* **Smart Filter & Noise Rejection:**
+  - Automatically ignores event logs (`*Events*.csv`), referee tables, lineups, and ancillary metadata so you can drop raw match archives directly into `data/` without manual cleanup.
+
+#### 2. Directory Layout:
+Simply place your raw downloaded tracking files into the `data/` directory (or any subfolder inside it):
+
+```text
+Possession-Estimation/
+├── data/                                         # Place downloaded match files here
+│   ├── Match_1_RawTrackingData_Home_Team.csv     # Metrica Home tracking table
+│   ├── Match_1_RawTrackingData_Away_Team.csv     # Metrica Away tracking table
+│   ├── Match_1_RawEventsData.csv                 # (Auto-ignored event stream)
+│   ├── Match_2_RawTrackingData_Home_Team.csv
+│   └── Match_2_RawTrackingData_Away_Team.csv
+├── artifacts/                                    # Target directory for output submissions
+│   ├── submission_Match_1.csv                    # Clean, validated submission file
+│   ├── submission_Match_2.csv
+│   └── visualizations/                           # Tactical pitch & posterior dashboards
+│       ├── Match_1_diagnostic.png
+│       └── Match_2_diagnostic.png
+└── auto_process_competition.py
+```
+
+#### 3. Environment & Prerequisites:
+If using live TypeSafe AI (`Jev / System One`) reasoning for boundary edge-cases, set your API key in your terminal session:
+
+```powershell
+# Windows PowerShell:
+$env:TYPESAFE_API_KEY = "your_typesafe_api_key_here"
+
+# Linux / macOS Bash:
+export TYPESAFE_API_KEY="your_typesafe_api_key_here"
+```
+*(Note: If no API key is provided, the pipeline seamlessly falls back to deterministic kinematic heuristics without failing).*
+
+#### 4. Execution Commands:
+
+##### A. Full Competition Batch Run (Production):
+Processes every match detected in `data/`, applies out-of-fold calibrated models and Jev boundary refinement, validates submission contracts, and exports tactical diagnostic plots:
+
+```powershell
+.\.venv\Scripts\python.exe auto_process_competition.py --data-dir data --output-dir artifacts --live-jev --visualize
+```
+
+##### B. Fast Sanity Check (Recommended First Step):
+Before processing full 90-minute matches (~145,000 frames each), run a quick verification on the first 2,500 frames (~100 seconds) using `--max-frames`:
+
+```powershell
+.\.venv\Scripts\python.exe auto_process_competition.py --data-dir data --output-dir artifacts --live-jev --max-frames 2500 --visualize
+```
+
+##### C. Offline / Heuristic Run (No API Key Required):
+Run inference using purely deterministic kinematic classification and Soft Viterbi temporal relaxation:
+
+```powershell
+.\.venv\Scripts\python.exe auto_process_competition.py --data-dir data --output-dir artifacts --visualize
+```
+
+#### 5. Output Verification & Contract:
+The pipeline produces submission files with zero missing values, guaranteed monotonicity, and strict schema compliance:
+* **Output Path:** `artifacts/submission_<match_id>.csv`
+* **Output Columns:**
+  - `frame`: Frame index (integer, strictly ascending).
+  - `possession_team`: Final decoded team label (`Home` or `Away`).
+  - `confidence`: Calibrated posterior probability `[0.50, 1.00]`.
+  - `possession_state`: Fine-grained latent state (`Home`, `Away`, `Contested_Home`, `Contested_Away`, `Unknown_Missing_Ball`, `Dead_Ball`).
+* **Visual Dashboard:** Multi-panel tactical 2D pitch map with player velocity vectors, ball trajectory, and rolling team possession probability saved to `artifacts/visualizations/<match_id>_diagnostic.png`.
+
+#### 6. Batch CLI Flag Reference:
+| Flag | Default | Description |
+|---|---|---|
+| `--data-dir` | `data` | Directory where competition tracking files are located (searched recursively). |
+| `--output-dir` | `artifacts` | Destination directory for generated submission CSVs and diagnostic plots. |
+| `--live-jev` | `False` | Enables live TypeSafe AI (`Jev / System One`) LLM queries for sparse boundary ambiguity frames. |
+| `--max-frames` | `None` | Caps frames processed per match (e.g. `2500` for ~100s smoke tests). |
+| `--visualize` | `False` | Renders and saves high-resolution 3-panel tactical dashboard PNGs. |
+| `--model-bundle` | `artifacts/barca_possession_mvp_v2.pkl` | Path to the trained LightGBM model bundle. |
 
 
 ---
@@ -214,6 +308,8 @@ The unified execution script [`run_submission_pipeline.py`](file:///run_submissi
 .
 ├── docs/
 │   └── technical_submission_report.md     # Detailed RFC v2.0 technical report
+├── auto_process_competition.py            # Automated batch scanning & inference for competition data
+├── ingest_and_test_metrica_sample.py      # Official Metrica Sample Game 1 ingestion & test suite
 ├── run_submission_pipeline.py             # Unified CLI submission & prediction pipeline
 ├── task1_schema_and_preprocessing.py      # Quality-aware segmented preprocessing
 ├── task2_feature_engine.py                # Kinematics, reachability & control evidence
@@ -221,7 +317,7 @@ The unified execution script [`run_submission_pipeline.py`](file:///run_submissi
 ├── task4_classifier_and_decoder.py        # Team-swap GBDT & Soft Viterbi decoder
 ├── task5_evaluation_and_ablation.py       # Metrics, turnover matching & ablation runner
 ├── task6_match_visualizer.py              # 2D pitch & multi-panel diagnostic dashboard
-├── .gitignore                             # Ignored caches and virtual environments
+├── .gitignore                             # Ignored caches, datasets and virtual environments
 └── README.md                              # Project documentation & benchmark overview
 ```
 

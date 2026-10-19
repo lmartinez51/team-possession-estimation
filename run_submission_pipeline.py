@@ -135,7 +135,195 @@ class MetricaFormatAdapter:
     def load_table(path: str) -> pd.DataFrame:
         if path.lower().endswith(".parquet"):
             return pd.read_parquet(path)
-        return pd.read_csv(path)
+        return pd.read_csv(path, low_memory=False)
+
+    @staticmethod
+    def _is_raw_metrica_csv(path: str) -> bool:
+        if not path or not os.path.exists(path) or not path.lower().endswith(".csv"):
+            return False
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                first_line = f.readline().strip()
+                return ("Home" in first_line or "Away" in first_line) and first_line.startswith(",")
+        except Exception:
+            return False
+
+    @staticmethod
+    def parse_metrica_tracking_csv(
+        file_path: str, team_prefix: str
+    ) -> Tuple[pd.DataFrame, Dict[str, Tuple[str, str]]]:
+        with open(file_path, "r", encoding="utf-8") as f:
+            header_row0 = f.readline().strip().split(",")
+            header_row1 = f.readline().strip().split(",")
+            header_row2 = f.readline().strip().split(",")
+
+        col_names = ["period_id", "frame_id", "timestamp_s"]
+        player_col_map: Dict[str, Tuple[str, str]] = {}
+
+        idx = 3
+        num_cols = len(header_row2)
+        while idx < num_cols:
+            h1 = header_row1[idx].strip() if idx < len(header_row1) else ""
+            h2 = header_row2[idx].strip() if idx < len(header_row2) else ""
+
+            if "ball" in h2.lower() or "ball" in h1.lower():
+                col_x = "ball_x"
+                col_y = "ball_y"
+                col_names.extend([col_x, col_y])
+                idx += 2
+            elif h2 or h1:
+                player_label = h2 if h2 else f"Player{h1}"
+                pid = f"{team_prefix}_{player_label}"
+                col_x = f"{pid}_x"
+                col_y = f"{pid}_y"
+                col_names.extend([col_x, col_y])
+                player_col_map[pid] = (col_x, col_y)
+                idx += 2
+            else:
+                col_names.append(f"extra_{idx}")
+                idx += 1
+
+        df = pd.read_csv(file_path, skiprows=3, header=None, low_memory=False)
+        if len(df.columns) > len(col_names):
+            col_names.extend([f"col_{i}" for i in range(len(col_names), len(df.columns))])
+        df.columns = col_names[: len(df.columns)]
+
+        df["period_id"] = pd.to_numeric(df["period_id"], errors="coerce").fillna(1).astype(int)
+        df["frame_id"] = pd.to_numeric(df["frame_id"], errors="coerce").fillna(0).astype(int)
+        df["timestamp_s"] = pd.to_numeric(df["timestamp_s"], errors="coerce").fillna(0.0).astype(float)
+        return df, player_col_map
+
+    @classmethod
+    def from_metrica_raw_files(
+        cls,
+        file1_path: str,
+        file2_path: str,
+        metadata_json_path: Optional[str] = None,
+        max_frames: Optional[int] = None,
+    ) -> ValidatedTrackingDataset:
+        with open(file1_path, "r", encoding="utf-8") as f:
+            line_0 = f.readline()
+        if "Away" in line_0 and "Home" not in line_0:
+            home_path, away_path = file2_path, file1_path
+        else:
+            home_path, away_path = file1_path, file2_path
+
+        home_df, home_players = cls.parse_metrica_tracking_csv(home_path, "H")
+        away_df, away_players = cls.parse_metrica_tracking_csv(away_path, "A")
+
+        if max_frames and len(home_df) > max_frames:
+            home_df = home_df.iloc[:max_frames].copy()
+            away_df = away_df.iloc[:max_frames].copy()
+
+        frame_ids = home_df["frame_id"].to_numpy(dtype=int)
+        period_ids = home_df["period_id"].to_numpy(dtype=int)
+        timestamps = home_df["timestamp_s"].to_numpy(dtype=float)
+
+        if "ball_x" in home_df.columns and "ball_y" in home_df.columns:
+            ball_x_raw = pd.to_numeric(home_df["ball_x"], errors="coerce").to_numpy(dtype=float)
+            ball_y_raw = pd.to_numeric(home_df["ball_y"], errors="coerce").to_numpy(dtype=float)
+        else:
+            ball_x_raw = pd.to_numeric(away_df["ball_x"], errors="coerce").to_numpy(dtype=float)
+            ball_y_raw = pd.to_numeric(away_df["ball_y"], errors="coerce").to_numpy(dtype=float)
+
+        frame_df = pd.DataFrame({
+            "frame_id": frame_ids,
+            "timestamp_s": timestamps,
+            "period_id": period_ids,
+            "ball_x": ball_x_raw,
+            "ball_y": ball_y_raw,
+            "is_dead_ball": False,
+            "is_contested": False,
+            "eval_mask": True,
+            "camera_cut": False,
+        })
+
+        players: Dict[str, PlayerMeta] = {}
+        player_frames_list: List[pd.DataFrame] = []
+
+        for pid, (xcol, ycol) in home_players.items():
+            digits = "".join(c for c in pid if c.isdigit())
+            j_num = int(digits) if digits else 99
+            role = PlayerRole.GK if j_num == 11 else PlayerRole.OUTFIELD
+            players[pid] = PlayerMeta(pid, TeamID.HOME, role, j_num)
+
+            xs = pd.to_numeric(home_df[xcol], errors="coerce").to_numpy(dtype=float)
+            ys = pd.to_numeric(home_df[ycol], errors="coerce").to_numpy(dtype=float)
+            player_frames_list.append(pd.DataFrame({
+                "frame_id": frame_ids,
+                "player_id": pid,
+                "x": xs,
+                "y": ys,
+                "visibility_conf": np.where(np.isfinite(xs), 1.0, 0.0),
+            }))
+
+        for pid, (xcol, ycol) in away_players.items():
+            digits = "".join(c for c in pid if c.isdigit())
+            j_num = int(digits) if digits else 99
+            role = PlayerRole.GK if j_num == 25 else PlayerRole.OUTFIELD
+            players[pid] = PlayerMeta(pid, TeamID.AWAY, role, j_num)
+
+            xs = pd.to_numeric(away_df[xcol], errors="coerce").to_numpy(dtype=float)
+            ys = pd.to_numeric(away_df[ycol], errors="coerce").to_numpy(dtype=float)
+            player_frames_list.append(pd.DataFrame({
+                "frame_id": frame_ids,
+                "player_id": pid,
+                "x": xs,
+                "y": ys,
+                "visibility_conf": np.where(np.isfinite(xs), 1.0, 0.0),
+            }))
+
+        player_tracks_df = pd.concat(player_frames_list, ignore_index=True)
+
+        if metadata_json_path and os.path.exists(metadata_json_path):
+            with open(metadata_json_path, "r", encoding="utf-8") as f:
+                m_dict = json.load(f)
+            metadata = MatchMetadata(
+                match_id=str(m_dict.get("match_id", "METRICA_SAMPLE_GAME")),
+                sampling_rate_hz=float(m_dict.get("sampling_rate_hz", 25.0)),
+                pitch_length_m=float(m_dict.get("pitch_length_m", 105.0)),
+                pitch_width_m=float(m_dict.get("pitch_width_m", 68.0)),
+                coord_semantics=CoordinateSemantics(
+                    m_dict.get("coord_semantics", CoordinateSemantics.NORMALIZED_01.value)
+                ),
+                home_attacks_right_period1=bool(m_dict.get("home_attacks_right_period1", True)),
+            )
+        else:
+            metadata = MatchMetadata(
+                match_id="METRICA_SAMPLE_GAME",
+                sampling_rate_hz=25.0,
+                pitch_length_m=105.0,
+                pitch_width_m=68.0,
+                coord_semantics=CoordinateSemantics.NORMALIZED_01,
+                home_attacks_right_period1=True,
+            )
+
+        return TrackingSchemaValidator.validate_and_normalize(
+            metadata=metadata,
+            players=players,
+            frame_df=frame_df,
+            player_tracks_df=player_tracks_df,
+        )
+
+    @classmethod
+    def from_canonical_files(
+        cls,
+        frame_path: str,
+        players_path: str,
+        metadata_json_path: Optional[str] = None,
+        max_frames: Optional[int] = None,
+    ) -> ValidatedTrackingDataset:
+        if cls._is_raw_metrica_csv(frame_path) or cls._is_raw_metrica_csv(players_path):
+            print(f"[INFO] Auto-detected raw Metrica Sports split Home/Away tracking tables. Ingesting multi-header format...")
+            return cls.from_metrica_raw_files(frame_path, players_path, metadata_json_path, max_frames=max_frames)
+
+        f_df = cls.load_table(frame_path)
+        p_df = cls.load_table(players_path)
+        if max_frames and len(f_df) > max_frames:
+            fids = set(f_df["frame_id"].iloc[:max_frames])
+            f_df = f_df.iloc[:max_frames].copy()
+            p_df = p_df[p_df["frame_id"].isin(fids)].copy()
+        return cls._build_validated_dataset(f_df, p_df, metadata_json_path)
 
     @classmethod
     def normalize_frame_df(cls, df: pd.DataFrame, default_fps: float = 25.0) -> pd.DataFrame:
@@ -298,17 +486,6 @@ class MetricaFormatAdapter:
             frame_df=f_norm,
             player_tracks_df=p_norm,
         )
-
-    @classmethod
-    def from_canonical_files(
-        cls,
-        frame_path: str,
-        players_path: str,
-        metadata_json_path: Optional[str] = None,
-    ) -> ValidatedTrackingDataset:
-        f_df = cls.load_table(frame_path)
-        p_df = cls.load_table(players_path)
-        return cls._build_validated_dataset(f_df, p_df, metadata_json_path)
 
     @classmethod
     def from_wide_table(
@@ -801,6 +978,12 @@ def main() -> None:
         action="store_true",
         help="Enable live TypeSafe AI (Jev / System One) API calls using TYPESAFE_API_KEY.",
     )
+    parser.add_argument(
+        "--max-frames",
+        type=int,
+        default=None,
+        help="Optional maximum number of frames to load for rapid testing.",
+    )
 
     args = parser.parse_args()
 
@@ -825,10 +1008,14 @@ def main() -> None:
         pipeline.config.use_live_jev_api = bool(args.live_jev)
 
         if args.players and os.path.exists(args.players):
-            dataset = MetricaFormatAdapter.from_canonical_files(args.frames, args.players, args.meta)
+            dataset = MetricaFormatAdapter.from_canonical_files(
+                args.frames, args.players, args.meta, max_frames=args.max_frames
+            )
         else:
             # Single-table wide format support
             f_table = MetricaFormatAdapter.load_table(args.frames)
+            if args.max_frames and len(f_table) > args.max_frames:
+                f_table = f_table.iloc[:args.max_frames].copy()
             dataset = MetricaFormatAdapter.from_wide_table(f_table, args.meta)
 
         pred_df, diag = pipeline.predict_match(dataset, use_cache=True)
