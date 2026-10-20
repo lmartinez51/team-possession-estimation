@@ -359,9 +359,10 @@ Start-Process artifacts\visualizations\viewer.html
 ```
 .
 ├── docs/
-│   ├── technical_submission_report.md     # Informe técnico completo de la arquitectura RFC v2.0
-│   ├── competition_quick_start_guide.md   # Guía rápida de comandos y ejecución el día de la competencia
-│   └── guia_validacion_criterios.md       # Criterios de evaluación de los jueces y checklist de entrega
+│   ├── technical_submission_report.md          # Informe técnico completo de la arquitectura RFC v2.0
+│   ├── competition_quick_start_guide.md        # Guía rápida de comandos y ejecución el día de la competencia (ES)
+│   ├── competition_quick_start_guide_english.md # Guía rápida de comandos y ejecución el día de la competencia (EN)
+│   └── guia_validacion_criterios.md            # Criterios de evaluación de los jueces y checklist de entrega
 ├── auto_process_competition.py            # Escaneo batch automatizado e inferencia de partidos
 ├── generate_3d_replay_html.py             # Generador de repeticiones 3D interactivas WebGL / Three.js
 ├── ingest_and_test_metrica_sample.py      # Suite de ingesta y validación de muestra Metrica Sports
