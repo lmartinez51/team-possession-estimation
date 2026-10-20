@@ -360,7 +360,9 @@ Start-Process artifacts\visualizations\viewer.html
 ```
 .
 ├── docs/
-│   └── technical_submission_report.md     # Detailed RFC v2.0 technical report
+│   ├── technical_submission_report.md     # Detailed RFC v2.0 technical report
+│   ├── competition_quick_start_guide.md   # Competition day execution & terminal cheat-sheet
+│   └── guia_validacion_criterios.md       # Ground-truth evaluation criteria & submission checklist
 ├── auto_process_competition.py            # Automated batch scanning & inference for competition data
 ├── generate_3d_replay_html.py             # 3D interactive WebGL/Three.js broadcast replay generator
 ├── ingest_and_test_metrica_sample.py      # Official Metrica Sample Game 1 ingestion & test suite
